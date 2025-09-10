@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ photo.original_filename }} - PhotoVault{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ photo.original_filename }}</h5>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                           download="{{ photo.original_filename }}" 
+                           class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-download"></i> Download
+                        </a>
+                        {% if photo.edited_filename %}
+                        <a href="{{ url_for('static', filename='uploads/' + photo.edited_filename) }}" 
+                           target="_blank" 
+                           class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-eye"></i> View Edited
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                         class="img-fluid w-100" 
+                         alt="{{ photo.original_filename }}"
+                         style="max-height: 70vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Photo Details</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Original Name:</dt>
+                        <dd class="col-sm-7">{{ photo.original_filename }}</dd>
+                        
+                        <dt class="col-sm-5">Uploaded:</dt>
+                        <dd class="col-sm-7">{{ photo.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        
+                        <dt class="col-sm-5">File Size:</dt>
+                        <dd class="col-sm-7">{{ "%.2f"|format(photo.file_size / 1024 / 1024) }} MB</dd>
+                        
+                        <dt class="col-sm-5">Dimensions:</dt>
+                        <dd class="col-sm-7">{{ photo.width }} × {{ photo.height }}</dd>
+                        
+                        {% if photo.edited_filename %}
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7"><span class="badge bg-success">Edited</span></dd>
+                        {% else %}
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7"><span class="badge bg-secondary">Original</span></dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-house"></i> Back to Dashboard
+                        </a>
+                        <a href="{{ url_for('main.originals') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-images"></i> Back to Gallery
+                        </a>
+                        <a href="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                           target="_blank" 
+                           class="btn btn-outline-info">
+                            <i class="bi bi-arrows-fullscreen"></i> View Full Size
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
