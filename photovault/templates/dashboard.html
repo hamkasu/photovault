@@ -118,6 +118,16 @@
                                 {% if photo.edited_filename %}
                                 <span class="badge bg-success mt-1">Edited</span>
                                 {% endif %}
+                                <div class="photo-actions mt-1">
+                                    <a href="{{ url_for('main.view_photo', photo_id=photo.id) }}" 
+                                       class="btn btn-outline-light btn-sm">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('main.editor', photo_id=photo.id) }}" 
+                                       class="btn btn-outline-light btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}

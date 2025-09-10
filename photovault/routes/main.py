@@ -78,6 +78,29 @@ def editor(photo_id):
     photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
     return render_template('editor.html', photo=photo)
 
+@main_bp.route('/rename/<int:photo_id>', methods=['POST'])
+@login_required
+def rename_photo(photo_id):
+    """Rename a photo's display name"""
+    photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
+    
+    new_name = request.form.get('new_name', '').strip()
+    if not new_name:
+        flash('Photo name cannot be empty', 'error')
+        return redirect(request.referrer or url_for('main.dashboard'))
+    
+    # Update the original filename (display name)
+    photo.original_filename = new_name
+    
+    try:
+        db.session.commit()
+        flash(f'Photo renamed to "{new_name}" successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error renaming photo. Please try again.', 'error')
+    
+    return redirect(request.referrer or url_for('main.dashboard'))
+
 @main_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
