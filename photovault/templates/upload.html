@@ -4,70 +4,11 @@
 
 {% block extra_js %}
 <script>
-async function uploadFiles(files) {
-    console.log('uploadFiles called with:', files.length, 'files');
-    
-    if (!files || files.length === 0) {
-        alert('No files selected.');
-        return;
-    }
-
-    const formData = new FormData();
-    for (let file of files) {
-        formData.append('files[]', file);
-        console.log('Added file:', file.name);
-    }
-
-    const progressElement = document.getElementById('uploadProgress');
-    if (progressElement) {
-        progressElement.style.display = 'block';
-        progressElement.textContent = 'Uploading photos...';
-        progressElement.className = 'alert alert-info';
-    }
-
-    console.log('Making POST request to /api/upload');
-    
-    try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-        });
-
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Response data:', data);
-
-        if (data.success) {
-            if (progressElement) {
-                progressElement.className = 'alert alert-success';
-                progressElement.textContent = 'Upload successful!';
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 1500);
-            }
-        } else {
-            const errorMessage = data.message || 'Upload failed.';
-            if (progressElement) {
-                progressElement.className = 'alert alert-danger';
-                progressElement.textContent = errorMessage;
-            }
-        }
-    } catch (error) {
-        console.error('Upload error:', error);
-        if (progressElement) {
-            progressElement.className = 'alert alert-danger';
-            progressElement.textContent = 'Upload error: ' + error.message;
-        }
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('file');
     const uploadArea = document.getElementById('uploadArea');
-    const uploadForm = document.getElementById('uploadForm');
-    const uploadBtn = document.getElementById('uploadBtn');
     
-    // File selection feedback
+    // Simple file selection feedback - no API calls
     fileInput.addEventListener('change', function() {
         if (this.files && this.files.length > 0) {
             const fileCount = this.files.length;
@@ -81,50 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-muted">${fileCount > 1 ? fileCount + ' files selected' : firstFile.name}</p>
                 <small class="text-success">Total Size: ${totalSizeMB} MB</small>
             `;
-        }
-    });
-    
-    // Handle button click
-    uploadBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Upload button clicked');
-        
-        const files = fileInput.files;
-        console.log('Files selected:', files.length);
-        
-        if (files && files.length > 0) {
-            uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
-            uploadBtn.disabled = true;
-            
-            console.log('Calling uploadFiles function');
-            uploadFiles(Array.from(files)).finally(() => {
-                uploadBtn.innerHTML = '<i class="bi bi-upload"></i> Upload Photos';
-                uploadBtn.disabled = false;
-            });
-        } else {
-            alert('Please select at least one file to upload.');
-        }
-    });
-    
-    // Drag and drop
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            fileInput.dispatchEvent(new Event('change'));
         }
     });
 });
