@@ -25,13 +25,13 @@
                 <div class="card-body d-flex flex-column"> <!-- Use flexbox for layout -->
                     <p class="card-text small flex-grow-1">{{ photo.original_filename }}</p> <!-- Allow text to grow -->
                     <div class="btn-group btn-group-sm" role="group">
-                        <!-- Link to Editor, passing the photo ID -->
-                        <a href="{{ url_for('main.editor', photo_id=photo.id) }}" class="btn btn-outline-primary">
-                            <i class="bi bi-pencil"></i> Edit
+                        <!-- View photo details -->
+                        <a href="{{ url_for('main.view_photo', photo_id=photo.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
                         </a>
-                         <!-- Download the ORIGINAL -->
-                        <a href="{{ url_for('photo.download', photo_id=photo.id) }}?original=true" class="btn btn-outline-success">
-                            <i class="bi bi-download"></i> Orig.
+                         <!-- Download the original file -->
+                        <a href="{{ url_for('static', filename='uploads/' + photo.filename) }}" download="{{ photo.original_filename }}" class="btn btn-outline-success">
+                            <i class="bi bi-download"></i> Download
                         </a>
                         <!-- Optional: View Active Version (if different) -->
                         {% if photo.edited_filename %}
