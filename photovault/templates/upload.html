@@ -5,6 +5,8 @@
 {% block extra_js %}
 <script>
 async function uploadFiles(files) {
+    console.log('uploadFiles called with:', files.length, 'files');
+    
     if (!files || files.length === 0) {
         alert('No files selected.');
         return;
@@ -13,6 +15,7 @@ async function uploadFiles(files) {
     const formData = new FormData();
     for (let file of files) {
         formData.append('files[]', file);
+        console.log('Added file:', file.name);
     }
 
     const progressElement = document.getElementById('uploadProgress');
@@ -22,13 +25,17 @@ async function uploadFiles(files) {
         progressElement.className = 'alert alert-info';
     }
 
+    console.log('Making POST request to /api/upload');
+    
     try {
         const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
         });
 
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (data.success) {
             if (progressElement) {
@@ -80,12 +87,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle button click
     uploadBtn.addEventListener('click', function(e) {
         e.preventDefault();
+        console.log('Upload button clicked');
         
         const files = fileInput.files;
+        console.log('Files selected:', files.length);
+        
         if (files && files.length > 0) {
             uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
             uploadBtn.disabled = true;
             
+            console.log('Calling uploadFiles function');
             uploadFiles(Array.from(files)).finally(() => {
                 uploadBtn.innerHTML = '<i class="bi bi-upload"></i> Upload Photos';
                 uploadBtn.disabled = false;
