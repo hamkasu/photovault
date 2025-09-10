@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from photovault.models import Photo, User, db
 from sqlalchemy import func
@@ -71,10 +71,73 @@ def view_photo(photo_id):
     photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
     return render_template('view_photo.html', photo=photo)
 
-@main_bp.route('/upload')
+@main_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
     """Upload page for photos"""
+    if request.method == 'POST':
+        # Handle form upload
+        if 'files[]' not in request.files:
+            flash('No files provided', 'error')
+            return redirect(url_for('main.upload'))
+        
+        files = request.files.getlist('files[]')
+        uploaded_files = []
+        errors = []
+        
+        for file in files:
+            if file and file.filename != '':
+                # Import upload logic from photo route
+                from photovault.routes.photo import allowed_file
+                from werkzeug.utils import secure_filename
+                from PIL import Image
+                import os, random, string
+                
+                if allowed_file(file.filename):
+                    try:
+                        # Generate unique filename
+                        file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+                        random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+                        filename = f"{random_chars}.{file_ext}" if file_ext else random_chars
+                        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                        
+                        # Save file
+                        file.save(filepath)
+                        
+                        # Get image dimensions
+                        with Image.open(filepath) as img:
+                            width, height = img.size
+                        
+                        # Create database entry
+                        photo = Photo(
+                            filename=filename,
+                            original_filename=secure_filename(file.filename),
+                            user_id=current_user.id,
+                            file_size=os.path.getsize(filepath),
+                            width=width,
+                            height=height
+                        )
+                        db.session.add(photo)
+                        uploaded_files.append(filename)
+                        
+                    except Exception as e:
+                        errors.append(f"Error processing {file.filename}: {str(e)}")
+                else:
+                    errors.append(f"Invalid file type: {file.filename}")
+        
+        try:
+            db.session.commit()
+            if uploaded_files:
+                flash(f'Successfully uploaded {len(uploaded_files)} file(s)!', 'success')
+            if errors:
+                for error in errors:
+                    flash(error, 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Database error: {str(e)}', 'error')
+        
+        return redirect(url_for('main.dashboard'))
+    
     return render_template('upload.html')
 
 @main_bp.route('/profile')
