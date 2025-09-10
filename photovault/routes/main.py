@@ -13,6 +13,11 @@ def index():
         return redirect(url_for('main.dashboard'))
     return render_template('index.html')
 
+@main_bp.route('/about')
+def about():
+    """Company about page"""
+    return render_template('about.html')
+
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -65,11 +70,6 @@ def view_photo(photo_id):
     """View a specific photo"""
     photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
     return render_template('view_photo.html', photo=photo)
-
-@main_bp.route('/about')
-def about():
-    """Company about page"""
-    return render_template('about.html')
 
 @main_bp.route('/profile')
 @login_required

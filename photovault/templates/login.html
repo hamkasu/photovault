@@ -1,77 +1,80 @@
 {% extends "base.html" %}
-{% block title %}Login - PhotoVault by Calmic Sdn Bhd{% endblock %}
+
+{% block title %}Login{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-lg border-0">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header text-center">
+                    <img src="{{ url_for('static', filename='img/calmic-logo.png') }}" 
+                         alt="Calmic Logo" 
+                         height="40" 
+                         class="mb-2"
+                         onerror="this.style.display='none';">
+                    <h4 class="mb-0">Sign In to PhotoVault</h4>
+                    <small class="text-muted">Calmic Sdn Bhd</small>
+                </div>
                 <div class="card-body p-4">
-                    <!-- Company Branding -->
-                    <div class="text-center mb-4">
-                        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Calmic Sdn Bhd" height="50" class="mb-3">
-                        <h4 class="card-title">Login to PhotoVault</h4>
-                        <p class="text-muted small">Calmic Sdn Bhd</p>
-                    </div>
-                    
                     <form method="POST">
                         <div class="mb-3">
-                            <label for="username" class="form-label">
-                                <i class="bi bi-person"></i> Username
-                            </label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <label for="username" class="form-label">Username or Email</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   required 
+                                   autocomplete="username"
+                                   placeholder="Enter your username or email">
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="password" class="form-label">
-                                <i class="bi bi-lock"></i> Password
-                            </label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   required 
+                                   autocomplete="current-password"
+                                   placeholder="Enter your password">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
-                        </button>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" 
+                                   class="form-check-input" 
+                                   id="remember" 
+                                   name="remember">
+                            <label class="form-check-label" for="remember">
+                                Remember me on this device
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right"></i> Sign In
+                            </button>
+                        </div>
                     </form>
-                    
-                    <hr>
-                    <div class="text-center">
-                        <p class="mb-0">Don't have an account?</p>
-                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-person-plus"></i> Register here
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        Don't have an account? 
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                            Create one here
                         </a>
-                    </div>
+                    </small>
                 </div>
             </div>
             
-            <!-- Company Footer in Login -->
+            <!-- Company info -->
             <div class="text-center mt-4">
                 <small class="text-muted">
-                    Powered by <strong>Calmic Sdn Bhd</strong><br>
-                    Secure • Reliable • Professional
+                    Professional photo management by 
+                    <strong>Calmic Sdn Bhd</strong>
                 </small>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.card {
-    transition: transform 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-.form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-}
-
-.btn {
-    transition: all 0.2s ease-in-out;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-}
-</style>
 {% endblock %}

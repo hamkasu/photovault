@@ -10,17 +10,17 @@
             <div class="hero-section text-center py-5">
                 <img src="{{ url_for('static', filename='img/calmic-logo.png') }}" 
                      alt="Calmic Logo" 
-                     height="80" 
-                     class="mb-4"
+                     height="60" 
+                     class="mb-3"
                      onerror="this.style.display='none';">
-                <h1 class="display-5 fw-bold mb-3">PhotoVault</h1>
-                <p class="lead text-muted mb-4">Professional Photo Management by Calmic Sdn Bhd</p>
-                <p class="fs-5 mb-4">Secure, organized, and efficient photo storage for your business needs</p>
-                <div class="d-flex gap-3 justify-content-center flex-wrap">
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                <h1 class="display-6 fw-normal mb-3">PhotoVault</h1>
+                <p class="lead text-muted mb-3">Professional Photo Management by Calmic Sdn Bhd</p>
+                <p class="mb-4">Secure, organized, and efficient photo storage for your business needs</p>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
                     </a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
                         <i class="bi bi-person-plus"></i> Create Account
                     </a>
                 </div>
@@ -90,7 +90,7 @@
             <div class="cta-section text-center py-4">
                 <h3 class="mb-3">Ready to Get Started?</h3>
                 <p class="text-muted mb-4">Join professionals who trust PhotoVault for their photo management needs</p>
-                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
                     <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
                         <i class="bi bi-person-plus"></i> Create Free Account
                     </a>
@@ -102,63 +102,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.hero-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.feature-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-}
-
-.feature-icon.bg-primary {
-    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%) !important;
-}
-
-.feature-icon.bg-success {
-    background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
-}
-
-.feature-icon.bg-info {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
-}
-
-.cta-section {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-}
-
-@media (max-width: 768px) {
-    .display-5 {
-        font-size: 2rem;
-    }
-    
-    .hero-section {
-        padding: 2rem 1rem !important;
-    }
-    
-    .btn-lg {
-        padding: 0.625rem 1.25rem;
-        font-size: 0.95rem;
-    }
-    
-    .d-flex.gap-3 {
-        flex-direction: column;
-        gap: 0.75rem !important;
-    }
-}
-</style>
 {% endblock %}

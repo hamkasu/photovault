@@ -1,86 +1,102 @@
 {% extends "base.html" %}
-{% block title %}Register - PhotoVault by Calmic Sdn Bhd{% endblock %}
+
+{% block title %}Register{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-lg border-0">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header text-center">
+                    <img src="{{ url_for('static', filename='img/calmic-logo.png') }}" 
+                         alt="Calmic Logo" 
+                         height="40" 
+                         class="mb-2"
+                         onerror="this.style.display='none';">
+                    <h4 class="mb-0">Create PhotoVault Account</h4>
+                    <small class="text-muted">Join Calmic's photo management platform</small>
+                </div>
                 <div class="card-body p-4">
-                    <!-- Company Branding -->
-                    <div class="text-center mb-4">
-                        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Calmic Sdn Bhd" height="50" class="mb-3">
-                        <h4 class="card-title">Create Account</h4>
-                        <p class="text-muted small">Join PhotoVault by Calmic Sdn Bhd</p>
-                    </div>
-                    
                     <form method="POST">
                         <div class="mb-3">
-                            <label for="username" class="form-label">
-                                <i class="bi bi-person"></i> Username
-                            </label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                            <div class="form-text">Choose a unique username</div>
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   required 
+                                   autocomplete="username"
+                                   placeholder="Choose a username"
+                                   minlength="3"
+                                   pattern="[a-zA-Z0-9_]+"
+                                   title="Username can only contain letters, numbers, and underscores">
+                            <small class="form-text text-muted">
+                                3+ characters, letters, numbers, and underscores only
+                            </small>
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="email" class="form-label">
-                                <i class="bi bi-envelope"></i> Email
-                            </label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                            <div class="form-text">We'll never share your email</div>
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   required 
+                                   autocomplete="email"
+                                   placeholder="Enter your email address">
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="password" class="form-label">
-                                <i class="bi bi-lock"></i> Password
-                            </label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                            <div class="form-text">Minimum 6 characters</div>
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   required 
+                                   autocomplete="new-password"
+                                   placeholder="Create a strong password"
+                                   minlength="8">
+                            <small class="form-text text-muted">
+                                Minimum 8 characters with uppercase, lowercase, and number
+                            </small>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
-                            <i class="bi bi-person-plus"></i> Create Account
-                        </button>
+                        
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="confirm_password" 
+                                   name="confirm_password" 
+                                   required 
+                                   autocomplete="new-password"
+                                   placeholder="Confirm your password">
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-plus"></i> Create Account
+                            </button>
+                        </div>
                     </form>
-                    
-                    <hr>
-                    <div class="text-center">
-                        <p class="mb-0">Already have an account?</p>
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-box-arrow-in-right"></i> Login here
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        Already have an account? 
+                        <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                            Sign in here
                         </a>
-                    </div>
+                    </small>
                 </div>
             </div>
             
-            <!-- Company Footer in Register -->
+            <!-- Company info -->
             <div class="text-center mt-4">
                 <small class="text-muted">
-                    By creating an account, you agree to our terms of service.<br>
-                    <strong>Calmic Sdn Bhd</strong> - Trusted Digital Solutions
+                    By creating an account, you agree to use PhotoVault responsibly.<br>
+                    Professional photo management by <strong>Calmic Sdn Bhd</strong>
                 </small>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.card {
-    transition: transform 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-.form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-}
-
-.btn {
-    transition: all 0.2s ease-in-out;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-}
-</style>
 {% endblock %}
