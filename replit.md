@@ -1,0 +1,50 @@
+# PhotoVault - Photo Management Application
+
+## Overview
+PhotoVault is a Flask-based web application for professional photo storage and management, developed by Calmic Sdn Bhd. This is a multi-user platform that allows users to upload, organize, and edit photos with role-based access control.
+
+## Recent Changes
+- **September 10, 2025**: Successfully imported and configured for Replit environment
+- Fixed main.py structure to separate CLI commands from routes
+- Configured Flask app to run on 0.0.0.0:5000 for Replit compatibility
+- Set up PostgreSQL-ready configuration (currently using SQLite)
+- Configured deployment with Gunicorn for production
+
+## Project Architecture
+- **Backend**: Flask with SQLAlchemy ORM
+- **Database**: SQLite (development), PostgreSQL-ready
+- **Authentication**: Flask-Login with user roles (User, Admin, Superuser)
+- **File Handling**: Pillow for image processing
+- **Frontend**: HTML templates with custom CSS and JavaScript
+- **Migrations**: Flask-Migrate with Alembic
+
+## Key Features
+- User registration and authentication
+- Photo upload and management
+- Image editing capabilities
+- Role-based access control (User/Admin/Superuser)
+- Dashboard with statistics
+- Photo organization and tagging
+
+## Development Setup
+- Python 3.11 with Flask 2.3.3
+- Configured for Replit hosting on port 5000
+- Development server: `python main.py`
+- Production server: Gunicorn with autoscale deployment
+
+## File Structure
+- `main.py`: Application entry point and CLI commands
+- `photovault/`: Main application package
+  - `__init__.py`: App factory and configuration
+  - `models/`: Database models (User, Photo)
+  - `routes/`: Blueprint route handlers
+  - `templates/`: Jinja2 HTML templates
+  - `static/`: CSS, JS, and image assets
+- `migrations/`: Database migration files
+
+## Environment Configuration
+- Host: 0.0.0.0 (required for Replit)
+- Port: 5000 (fixed for Replit)
+- Database: SQLite file-based (production-ready for PostgreSQL)
+- Upload folder: photovault/static/uploads
+- Max file size: 16MB
