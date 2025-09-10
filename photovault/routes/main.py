@@ -71,6 +71,12 @@ def view_photo(photo_id):
     photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
     return render_template('view_photo.html', photo=photo)
 
+@main_bp.route('/upload')
+@login_required
+def upload():
+    """Upload page for photos"""
+    return render_template('upload.html')
+
 @main_bp.route('/profile')
 @login_required
 def profile():
