@@ -71,6 +71,13 @@ def view_photo(photo_id):
     photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
     return render_template('view_photo.html', photo=photo)
 
+@main_bp.route('/editor/<int:photo_id>')
+@login_required
+def editor(photo_id):
+    """Photo editor for markup and editing"""
+    photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first_or_404()
+    return render_template('editor.html', photo=photo)
+
 @main_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():

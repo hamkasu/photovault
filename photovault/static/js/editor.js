@@ -3,8 +3,11 @@ let currentTool = 'move';
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
+let startX = 0;
+let startY = 0;
 let canvas, ctx, image;
 let brightness = 0, contrast = 0, saturation = 0, rotation = 0;
+let imageData = null;
 
 function initEditor() {
     canvas = document.getElementById('canvas');
@@ -37,7 +40,11 @@ function initEditor() {
     
     // Setup color and line width
     document.getElementById('drawColor').addEventListener('input', updateDrawingStyle);
-    document.getElementById('lineWidth').addEventListener('input', updateDrawingStyle);
+    document.getElementById('lineWidth').addEventListener('input', updateLineWidth);
+    document.getElementById('fontSize').addEventListener('input', updateFontSize);
+    
+    // Initialize editor when page loads
+    document.addEventListener('DOMContentLoaded', initEditor);
 }
 
 function handleTouchStart(e) {
@@ -70,9 +77,18 @@ function setTool(tool) {
     currentTool = tool;
     // Update UI to show active tool
     document.querySelectorAll('.btn-outline-primary').forEach(btn => {
-        btn.classList.remove('tool-active');
+        btn.classList.remove('active', 'tool-active');
     });
-    event.target.classList.add('tool-active');
+    event.target.classList.add('active', 'tool-active');
+    
+    // Show/hide text input for text tool
+    const textInput = document.getElementById('textInput');
+    if (tool === 'text') {
+        textInput.style.display = 'block';
+        textInput.focus();
+    } else {
+        textInput.style.display = 'none';
+    }
 }
 
 function startDrawing(e) {
@@ -80,22 +96,72 @@ function startDrawing(e) {
     
     isDrawing = true;
     [lastX, lastY] = getMousePos(canvas, e);
+    [startX, startY] = [lastX, lastY];
+    
+    // Save canvas state for shape drawing
+    if (['rectangle', 'circle', 'arrow'].includes(currentTool)) {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Handle text tool
+    if (currentTool === 'text') {
+        addText(lastX, lastY);
+        isDrawing = false;
+        return;
+    }
 }
 
 function draw(e) {
     if (!isDrawing) return;
     
     const [x, y] = getMousePos(canvas, e);
+    const color = document.getElementById('drawColor').value;
+    const lineWidth = parseInt(document.getElementById('lineWidth').value);
+    const fillShapes = document.getElementById('fillShapes').checked;
     
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = document.getElementById('drawColor').value;
-    ctx.lineWidth = document.getElementById('lineWidth').value;
+    // Restore canvas for shape tools
+    if (['rectangle', 'circle', 'arrow'].includes(currentTool)) {
+        ctx.putImageData(imageData, 0, 0);
+    }
+    
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
-    ctx.stroke();
+    ctx.lineJoin = 'round';
     
-    [lastX, lastY] = [x, y];
+    switch (currentTool) {
+        case 'pen':
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            [lastX, lastY] = [x, y];
+            break;
+            
+        case 'highlight':
+            ctx.globalAlpha = 0.3;
+            ctx.lineWidth = lineWidth * 3;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+            [lastX, lastY] = [x, y];
+            break;
+            
+        case 'rectangle':
+            drawRectangle(startX, startY, x - startX, y - startY, fillShapes);
+            break;
+            
+        case 'circle':
+            drawCircle(startX, startY, Math.sqrt((x - startX) ** 2 + (y - startY) ** 2), fillShapes);
+            break;
+            
+        case 'arrow':
+            drawArrow(startX, startY, x, y);
+            break;
+    }
 }
 
 function stopDrawing() {
