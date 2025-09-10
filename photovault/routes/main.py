@@ -76,17 +76,12 @@ def view_photo(photo_id):
 def upload():
     """Upload page for photos"""
     if request.method == 'POST':
-        # Handle form upload - debug what's actually received
-        print("DEBUG: request.files keys:", list(request.files.keys()))
-        print("DEBUG: request.files content:", dict(request.files))
-        
+        # Handle form upload
         if 'files[]' not in request.files:
             flash('No files provided', 'error')
             return redirect(url_for('main.upload'))
         
         files = request.files.getlist('files[]')
-        print("DEBUG: files list:", files)
-        print("DEBUG: number of files:", len(files))
         uploaded_files = []
         errors = []
         

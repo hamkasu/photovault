@@ -19,12 +19,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const firstFile = this.files[0];
                 console.log('First file:', firstFile.name, firstFile.size);
                 
-                uploadArea.innerHTML = `
-                    <i class="bi bi-file-image text-success" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3 text-success">${fileCount} File${fileCount > 1 ? 's' : ''} Selected</h5>
-                    <p class="text-muted">${firstFile.name}</p>
-                    <small class="text-success">Ready to upload</small>
-                `;
+                const uploadStatus = document.getElementById('uploadStatus');
+                if (uploadStatus) {
+                    uploadStatus.innerHTML = `
+                        <i class="bi bi-file-image text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-success">${fileCount} File${fileCount > 1 ? 's' : ''} Selected</h5>
+                        <p class="text-muted">${firstFile.name}</p>
+                        <small class="text-success">Ready to upload</small>
+                    `;
+                }
                 if (uploadBtn) uploadBtn.disabled = false;
             }
         });
@@ -64,9 +67,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" id="uploadForm">
                         <div class="upload-area mb-4" id="uploadArea">
-                            <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #6c757d;"></i>
-                            <h5 class="mt-3">Choose Photos to Upload</h5>
-                            <p class="text-muted">Drag and drop files here, or click to select</p>
+                            <div id="uploadStatus">
+                                <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #6c757d;"></i>
+                                <h5 class="mt-3">Choose Photos to Upload</h5>
+                                <p class="text-muted">Drag and drop files here, or click to select</p>
+                            </div>
                             <input type="file" 
                                    class="form-control" 
                                    id="file" 
