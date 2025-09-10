@@ -7,8 +7,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('file');
     const uploadArea = document.getElementById('uploadArea');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
     
-    // Simple file selection feedback - no API calls
+    // Enhanced file selection feedback with validation
     fileInput.addEventListener('change', function() {
         if (this.files && this.files.length > 0) {
             const fileCount = this.files.length;
@@ -16,13 +18,110 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalSize = Array.from(this.files).reduce((sum, file) => sum + file.size, 0);
             const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
             
+            // Check file types
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            const invalidFiles = Array.from(this.files).filter(file => !validTypes.includes(file.type));
+            
+            if (invalidFiles.length > 0) {
+                uploadArea.innerHTML = `
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-warning">Invalid File Types</h5>
+                    <p class="text-muted">Please select only image files (JPG, PNG, GIF, WebP)</p>
+                    <small class="text-danger">${invalidFiles.length} invalid file(s) detected</small>
+                `;
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            // Check file size (16MB max per file)
+            const maxSize = 16 * 1024 * 1024;
+            const oversizedFiles = Array.from(this.files).filter(file => file.size > maxSize);
+            
+            if (oversizedFiles.length > 0) {
+                uploadArea.innerHTML = `
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-warning">Files Too Large</h5>
+                    <p class="text-muted">Maximum file size is 16MB per image</p>
+                    <small class="text-danger">${oversizedFiles.length} file(s) exceed size limit</small>
+                `;
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            // All files valid
             uploadArea.innerHTML = `
-                <i class="bi bi-file-image" style="font-size: 3rem; color: #495057;"></i>
-                <h5 class="mt-3">${fileCount} File${fileCount > 1 ? 's' : ''} Selected</h5>
+                <i class="bi bi-file-image text-success" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-success">${fileCount} File${fileCount > 1 ? 's' : ''} Ready</h5>
                 <p class="text-muted">${fileCount > 1 ? fileCount + ' files selected' : firstFile.name}</p>
                 <small class="text-success">Total Size: ${totalSizeMB} MB</small>
             `;
+            uploadBtn.disabled = false;
         }
+    });
+    
+    // Form submission enhancement
+    uploadForm.addEventListener('submit', function(e) {
+        if (uploadBtn) {
+            uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+            uploadBtn.disabled = true;
+        }
+        
+        // Show progress message
+        const progressDiv = document.createElement('div');
+        progressDiv.id = 'uploadProgress';
+        progressDiv.className = 'alert alert-info mt-3';
+        progressDiv.innerHTML = '<i class="bi bi-cloud-upload"></i> Uploading photos, please wait...';
+        uploadForm.appendChild(progressDiv);
+    });
+    
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+        this.style.borderColor = '#007bff';
+        this.style.backgroundColor = '#f8f9fa';
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        this.style.borderColor = '#dee2e6';
+        this.style.backgroundColor = 'transparent';
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        this.style.borderColor = '#dee2e6';
+        this.style.backgroundColor = 'transparent';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            // Filter only image files
+            const imageFiles = Array.from(files).filter(file => 
+                file.type.startsWith('image/'));
+            
+            if (imageFiles.length > 0) {
+                // Create a new FileList-like object
+                const dt = new DataTransfer();
+                imageFiles.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+                
+                // Trigger change event
+                fileInput.dispatchEvent(new Event('change'));
+            } else {
+                uploadArea.innerHTML = `
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-warning">No Image Files</h5>
+                    <p class="text-muted">Please drop image files only</p>
+                `;
+            }
+        }
+    });
+    
+    // Click to upload area
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
     });
 });
 </script>

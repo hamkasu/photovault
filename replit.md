@@ -9,6 +9,9 @@ PhotoVault is a Flask-based web application for professional photo storage and m
 - Configured Flask app to run on 0.0.0.0:5000 for Replit compatibility
 - Set up PostgreSQL-ready configuration (currently using SQLite)
 - Configured deployment with Gunicorn for production
+- **Photo upload functionality fully operational** with enhanced JavaScript UX
+- Fixed all route references and template links for proper form submission
+- Added drag & drop, file validation, and progress feedback to upload interface
 
 ## Project Architecture
 - **Backend**: Flask with SQLAlchemy ORM
