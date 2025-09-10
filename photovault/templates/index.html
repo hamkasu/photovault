@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Welcome - PhotoVault{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">Welcome to PhotoVault</h1>
+            <p class="lead mb-4">Your secure, personal photo storage and editing platform</p>
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">Register</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!-- photovault/templates/editor.html -->
+{% extends "base.html" %}
+{% block title %}Edit Photo - PhotoVault{% endblock %}
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-md-9">
+            <canvas id="canvas"></canvas>
+            <!-- Load the ORIGINAL image as the source for editing -->
+            <img id="sourceImage" src="{{ url_for('static', filename='uploads/' + photo.filename) }}" style="display: none;">
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Editing Tools</h5>
+                    <small class="text-muted">Editing: {{ photo.original_filename }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Brightness</label>
+                        <input type="range" class="form-range" id="brightness" min="-100" max="100" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contrast</label>
+                        <input type="range" class="form-range" id="contrast" min="-100" max="100" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Saturation</label>
+                        <input type="range" class="form-range" id="saturation" min="-100" max="100" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rotation</label>
+                        <input type="range" class="form-range" id="rotation" min="0" max="360" value="0">
+                    </div>
+
+                    <h6>Drawing Tools</h6>
+                    <div class="btn-group mb-3" role="group">
+                        <button class="btn btn-outline-primary" onclick="setTool('pen')">
+                            <i class="bi bi-pen"></i> Pen
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="setTool('text')">
+                            <i class="bi bi-fonts"></i> Text
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="setTool('arrow')">
+                            <i class="bi bi-arrow-up-right"></i> Arrow
+                        </button>
+                    </div>
+
+                    <!-- Modified Color Picker Section -->
+                    <div class="mb-3">
+                        <label for="drawColor" class="form-label">Color</label>
+                        <!-- Added style to fix height/width -->
+                        <input type="color" class="form-control form-control-color" id="drawColor" value="#ff0000" style="height: 40px; width: 60px; padding: 5px;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Line Width</label>
+                        <input type="range" class="form-range" id="lineWidth" min="1" max="20" value="3">
+                    </div>
+                    <!-- End Modified Color Picker Section -->
+
+                    <hr>
+                    <button class="btn btn-success w-100 mb-2" onclick="saveEdit()">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                    <button class="btn btn-warning w-100 mb-2" onclick="resetImage()">
+                        <i class="bi bi-arrow-clockwise"></i> Reset Canvas
+                    </button>
+                     <!-- Optional Enhancement: Reset to Original Base Image -->
+                     <button class="btn btn-secondary w-100 mb-2" onclick="resetToOriginalImage()">
+                        <i class="bi bi-file-image"></i> Reload Original Image
+                    </button>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-dark w-100">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+<script>
+    // Pass the photo ID to the JavaScript
+    const photoId = {{ photo.id }};
+</script>
+{% endblock %}

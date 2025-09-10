@@ -1,0 +1,116 @@
+/* PhotoVault Custom Styles */
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.card {
+    transition: transform 0.2s;
+    height: 100%;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+#canvas {
+    max-width: 100%;
+    border: 1px solid #dee2e6;
+    background: white;
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.alert {
+    animation: slideIn 0.3s ease-in;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.upload-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.25rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-zone:hover {
+    border-color: #0d6efd;
+    background-color: #f0f8ff;
+}
+
+.upload-zone.dragover {
+    border-color: #0d6efd;
+    background-color: #e7f3ff;
+}
+
+/* Editor specific styles */
+.tool-active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.range-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+/* ... (your existing CSS rules) ... */
+
+/* --- Add these rules for better mobile responsiveness --- */
+/* Target extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+    /* Reduce padding inside the navbar container on very small screens */
+    .navbar .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    /* Slightly smaller brand text on very small screens if needed */
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+
+    /* Ensure navbar text (like "Welcome, username") wraps and doesn't overflow */
+    .navbar-text {
+        white-space: normal; /* Allow text to wrap */
+        word-break: break-word; /* Break long words if necessary */
+        /* Optional: Reduce font size slightly */
+        /* font-size: 0.875rem; */
+    }
+
+    /* Optional: Adjust padding on main content container for small screens */
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+/* --- End Additions --- */
+
