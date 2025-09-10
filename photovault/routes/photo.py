@@ -18,9 +18,11 @@ ALLOWED_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@photo_bp.route('/upload', methods=['POST'])
+@photo_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
+    if request.method == 'GET':
+        return jsonify({'error': 'GET method not supported. Use POST with files.'}), 405
     if 'files[]' not in request.files:
         return jsonify({'error': 'No files provided'}), 400
     
