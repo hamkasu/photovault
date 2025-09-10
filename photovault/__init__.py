@@ -1,16 +1,24 @@
-# photovault/__init__.py
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
-import os
-from dotenv import load_dotenv
 
-# Try to import version, provide fallback if missing
+# Try to load dotenv, but don't fail if it's not available
 try:
-    from photovault.version import get_version, get_version_info, get_full_version
+    from dotenv import load_dotenv
+    load_dotenv()
 except ImportError:
-    # Fallback version functions if version.py is missing
+    pass
+
+# Try to import company version info, provide fallback if missing
+try:
+    from photovault.version import (
+        get_version, get_version_info, get_full_version, 
+        get_company_info, get_app_title, get_copyright
+    )
+except ImportError:
+    # Fallback company functions if version.py is missing
     def get_version():
         return "1.0.0"
     
@@ -18,90 +26,110 @@ except ImportError:
         return {
             "version": "1.0.0",
             "build": "2025.09.10",
-            "author": "PhotoVault Team",
-            "description": "Personal Photo Storage and Editing Platform"
+            "author": "Calmic Sdn Bhd",
+            "company": "Calmic Sdn Bhd",
+            "description": "Professional Photo Storage and Management Platform",
+            "website": "https://calmic.com",
+            "support_email": "support@calmic.com"
         }
     
     def get_full_version():
-        return "PhotoVault v1.0.0 (Build 2025.09.10)"
+        return "PhotoVault v1.0.0 (Build 2025.09.10) - Calmic Sdn Bhd"
+    
+    def get_company_info():
+        return {
+            "name": "Calmic Sdn Bhd",
+            "description": "Leading provider of digital solutions and enterprise software",
+            "website": "https://calmic.com",
+            "support_email": "support@calmic.com",
+            "address": "Malaysia",
+            "established": "2025"
+        }
+    
+    def get_app_title():
+        return "PhotoVault by Calmic Sdn Bhd"
+    
+    def get_copyright():
+        return "© 2025 Calmic Sdn Bhd. All rights reserved."
 
-load_dotenv()
-
+# Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 
 def create_app():
+    """Create and configure the Flask application"""
     app = Flask(__name__)
     
-    # --- Security Configuration ---
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
-    
-    # Database
+    # Basic configuration
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///photovault.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # File Uploads
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'photovault/static/uploads')
-    app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)) # 16MB default
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
     
-    # --- Session Security ---
-    # Detect Railway production environment
-    is_production = (
-        os.getenv('FLASK_ENV') == 'production' or 
-        os.getenv('ENVIRONMENT') == 'production' or 
-        os.getenv('RAILWAY_ENVIRONMENT_NAME') is not None
-    )
-    
-    app.config['SESSION_COOKIE_SECURE'] = is_production
+    # Session configuration
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     
-    # Initialize extensions
+    # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     migrate.init_app(app, db)
-
-    # Register blueprints
-    from photovault.routes.auth import auth_bp
-    from photovault.routes.main import main_bp
-    from photovault.routes.photo import photo_bp
-    from photovault.routes.admin import admin_bp
-    from photovault.routes.superuser import superuser_bp
-    
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(main_bp)
-    app.register_blueprint(photo_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(superuser_bp)
     
     # Create upload folder
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except Exception as e:
+        print(f"Warning: Could not create upload folder: {e}")
     
+    # Register blueprints
+    try:
+        from photovault.routes.auth import auth_bp
+        from photovault.routes.main import main_bp
+        from photovault.routes.photo import photo_bp
+        from photovault.routes.admin import admin_bp
+        from photovault.routes.superuser import superuser_bp
+        
+        app.register_blueprint(auth_bp)
+        app.register_blueprint(main_bp) 
+        app.register_blueprint(photo_bp)
+        app.register_blueprint(admin_bp)
+        app.register_blueprint(superuser_bp)
+        
+        print("✓ All blueprints registered successfully")
+    except Exception as e:
+        print(f"Warning: Error registering blueprints: {e}")
+    
+    # Create database tables
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            print("✓ Database tables created")
+        except Exception as e:
+            print(f"Warning: Error creating database tables: {e}")
     
-    # --- Security Headers ---
+    # Add basic security headers
     @app.after_request
     def add_security_headers(response):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
-        
-        if is_production:
-            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        
         return response
     
-    # --- Version Context Processor ---
+    # --- Company Context Processor ---
     @app.context_processor
-    def inject_version():
-        """Make version information available to all templates"""
+    def inject_company_context():
+        """Make company and version information available to all templates"""
         return {
             'app_version': get_version(),
             'app_version_info': get_version_info(),
-            'app_full_version': get_full_version()
+            'app_full_version': get_full_version(),
+            'company_info': get_company_info(),
+            'app_title': get_app_title(),
+            'company_copyright': get_copyright()
         }
     
+    print("✓ PhotoVault by Calmic Sdn Bhd created successfully")
     return app
