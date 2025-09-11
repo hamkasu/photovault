@@ -11,6 +11,7 @@
 
 # PhotoVault Requirements
 # Professional Photo Management Platform by Calmic Sdn Bhd
+
 Flask==3.0.3
 Werkzeug==3.0.3
 itsdangerous==2.2.0
