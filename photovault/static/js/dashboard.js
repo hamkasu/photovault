@@ -1,3 +1,16 @@
+/*
+PhotoVault - Professional Photo Management Platform
+Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
+
+This software is proprietary and confidential. Unauthorized copying, distribution,
+modification, or use of this software is strictly prohibited.
+
+Website: https://www.calmic.com.my
+Email: support@calmic.com.my
+
+CALMIC SDN BHD - "Committed to Excellence"
+*/
+
 // photovault/static/js/dashboard.js
 // Dashboard functionality
 let stream = null;
@@ -125,9 +138,15 @@ async function deletePhoto(photoId) {
 async function startCamera() {
     const modalElement = document.getElementById('cameraModal');
     if (!modalElement) {
-        alert('Camera modal not found.');
+        console.warn('Camera modal not found - feature not available on this page');
         return;
     }
+    
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap not loaded');
+        return;
+    }
+    
     const modal = new bootstrap.Modal(modalElement);
     const video = document.getElementById('video');
 

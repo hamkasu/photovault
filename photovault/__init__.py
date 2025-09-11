@@ -1,3 +1,16 @@
+"""
+PhotoVault - Professional Photo Management Platform
+Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
+
+This software is proprietary and confidential. Unauthorized copying, distribution,
+modification, or use of this software is strictly prohibited.
+
+Website: https://www.calmic.com.my
+Email: support@calmic.com.my
+
+CALMIC SDN BHD - "Committed to Excellence"
+"""
+
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -29,8 +42,8 @@ except ImportError:
             "author": "Calmic Sdn Bhd",
             "company": "Calmic Sdn Bhd",
             "description": "Professional Photo Storage and Management Platform",
-            "website": "https://calmic.com",
-            "support_email": "support@calmic.com"
+            "website": "https://calmic.com.my",
+            "support_email": "postmaster@calmic.com,my"
         }
     
     def get_full_version():
@@ -40,10 +53,10 @@ except ImportError:
         return {
             "name": "Calmic Sdn Bhd",
             "description": "Leading provider of digital solutions and enterprise software",
-            "website": "https://calmic.com",
-            "support_email": "support@calmic.com",
+            "website": "https://calmic.com.my",
+            "support_email": "postmaster@calmic.com",
             "address": "Malaysia",
-            "established": "2025"
+            "established": "2022"
         }
     
     def get_app_title():
@@ -81,6 +94,7 @@ def create_app():
     # Create upload folder
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        print(f"✓ Upload folder created/verified: {app.config['UPLOAD_FOLDER']}")
     except Exception as e:
         print(f"Warning: Could not create upload folder: {e}")
     

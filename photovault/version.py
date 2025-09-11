@@ -1,3 +1,16 @@
+"""
+PhotoVault - Professional Photo Management Platform
+Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
+
+This software is proprietary and confidential. Unauthorized copying, distribution,
+modification, or use of this software is strictly prohibited.
+
+Website: https://www.calmic.com.my
+Email: support@calmic.com.my
+
+CALMIC SDN BHD - "Committed to Excellence"
+"""
+
 # photovault/version.py
 """Version information for PhotoVault by Calmic Sdn Bhd"""
 
@@ -6,17 +19,17 @@ __build__ = "2025.09.10"
 __author__ = "Calmic Sdn Bhd"
 __company__ = "Calmic Sdn Bhd"
 __description__ = "Professional Photo Storage and Management Platform"
-__website__ = "https://calmic.com"  # Update with your actual website
-__support_email__ = "support@calmic.com"  # Update with your actual email
+__website__ = "https://calmic.com.my"  # Update with your actual website
+__support_email__ = "postmaster@calmic.com.my"  # Update with your actual email
 
 # Company Information
 COMPANY_INFO = {
     "name": "Calmic Sdn Bhd",
     "description": "Leading provider of digital solutions and enterprise software",
-    "website": "https://calmic.com",
-    "support_email": "support@calmic.com",
+    "website": "https://calmic.com.my",
+    "support_email": "postmaster@calmic.com",
     "address": "Malaysia",  # Update with your actual address
-    "established": "2025"
+    "established": "2022"
 }
 
 # Version history
