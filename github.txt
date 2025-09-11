@@ -1,0 +1,38 @@
+# Navigate to project
+cd C:\PhotoReplit
+
+# Check current status
+git status
+
+# Stage all updated files
+git add .
+
+# Create detailed commit
+git commit -m "PhotoVault v1.0.0 - Complete website URL update
+
+Major Changes:
+- Updated all company website references to www.calmic.com.my
+- Changed default admin email to admin@calmic.com.my
+- Added professional copyright headers to all source files
+- Updated about.html with clickable company links
+- Enhanced index.html with proper company branding
+
+Files Modified:
+- photovault/version.py (core company info)
+- photovault/__init__.py (fallback URLs)
+- main.py (startup configuration)
+- photovault/templates/about.html (company page)
+- photovault/templates/index.html (homepage)
+- All .py, .html, .css, .js files (copyright headers)
+
+Technical Details:
+- Maintained backward compatibility
+- Updated context processors for template variables  
+- Ensured consistent branding across all pages
+- Professional intellectual property protection"
+
+# Push to GitHub
+git push origin main
+
+# Confirm upload
+git log --oneline -3

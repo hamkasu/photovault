@@ -540,4 +540,62 @@ footer .text-muted {
 .text-info { color: var(--info-color) !important; }
 .text-warning { color: var(--warning-color) !important; }
 .text-danger { color: var(--danger-color) !important; }
-.text-muted { color: var(--text-muted) !important; }
+.text-muted { color: var(--text-muted) !important; }/* Fix for Statistics Page Visibility Issues */
+
+/* Ensure statistics cards have proper contrast */
+.card.bg-gradient h3,
+.card.bg-gradient h4,
+.card.bg-gradient h5,
+.card.bg-gradient p,
+.card.bg-gradient small {
+    color: #ffffff !important;
+}
+
+/* Fix specific background colors */
+.bg-primary, .bg-primary * {
+    color: #ffffff !important;
+}
+
+.bg-success, .bg-success * {
+    color: #ffffff !important;
+}
+
+.bg-info, .bg-info * {
+    color: #ffffff !important;
+}
+
+.bg-warning, .bg-warning * {
+    color: #212529 !important;
+}
+
+.bg-danger, .bg-danger * {
+    color: #ffffff !important;
+}
+
+.bg-secondary, .bg-secondary * {
+    color: #ffffff !important;
+}
+
+/* Ensure card text is always visible */
+.card {
+    background-color: #ffffff !important;
+    color: #495057 !important;
+}
+
+.card-body {
+    color: inherit !important;
+}
+
+/* Statistics cards specific fixes */
+.stats-card h3,
+.stats-card h4 {
+    font-weight: 600 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.stats-card p,
+.stats-card small {
+    opacity: 0.9;
+    margin-bottom: 0 !important;
+}
+
