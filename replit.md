@@ -19,6 +19,10 @@ PhotoVault is a Flask-based web application for professional photo storage and m
 - **Photo rename capability added** with inline editing across all views
 - Users can rename photos from gallery, detail view, and dashboard with real-time updates
 - Secure rename functionality preserves original files while updating display names
+- **Photo delete functionality implemented** with single and bulk operations
+- Individual photo deletion available from all views with confirmation dialogs
+- Bulk selection interface with checkboxes for deleting multiple photos at once
+- Comprehensive file cleanup ensures both original and edited versions are properly removed
 
 ## Project Architecture
 - **Backend**: Flask with SQLAlchemy ORM
