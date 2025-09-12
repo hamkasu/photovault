@@ -227,7 +227,7 @@ function bulkDeletePhotos() {
     }
     
     if (confirm(`Are you sure you want to delete ${photoIds.length} photo(s)? This action cannot be undone.`)) {
-        fetch('/photo/bulk-delete', {
+        fetch('/api/photo/bulk-delete', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
