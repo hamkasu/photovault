@@ -11,7 +11,7 @@ Email: support@calmic.com.my
 CALMIC SDN BHD - "Committed to Excellence"
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 from flask_login import login_required, current_user
 from photovault.models import Photo, User, db
 from sqlalchemy import func
@@ -119,12 +119,31 @@ def rename_photo(photo_id):
 def upload():
     """Upload page for photos"""
     if request.method == 'POST':
-        # Handle form upload
-        if 'files[]' not in request.files:
+        # Check if this is an AJAX request (camera capture)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        # Handle file upload
+        if 'file' not in request.files and 'files[]' not in request.files:
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'No files provided'}), 400
             flash('No files provided', 'error')
             return redirect(url_for('main.upload'))
         
-        files = request.files.getlist('files[]')
+        # Get files (handle both 'file' and 'files[]' for compatibility)
+        files = []
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename != '':
+                files.append(file)
+        if 'files[]' in request.files:
+            files.extend(request.files.getlist('files[]'))
+        
+        if not files:
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'No valid files selected'}), 400
+            flash('No valid files selected', 'error')
+            return redirect(url_for('main.upload'))
+        
         uploaded_files = []
         errors = []
         
@@ -164,22 +183,43 @@ def upload():
                         uploaded_files.append(filename)
                         
                     except Exception as e:
-                        errors.append(f"Error processing {file.filename}: {str(e)}")
+                        error_msg = f"Error processing {file.filename}: {str(e)}"
+                        errors.append(error_msg)
+                        if is_ajax:
+                            return jsonify({'success': False, 'message': error_msg}), 500
                 else:
-                    errors.append(f"Invalid file type: {file.filename}")
+                    error_msg = f"Invalid file type: {file.filename}"
+                    errors.append(error_msg)
+                    if is_ajax:
+                        return jsonify({'success': False, 'message': error_msg}), 400
         
         try:
             db.session.commit()
-            if uploaded_files:
-                flash(f'Successfully uploaded {len(uploaded_files)} file(s)!', 'success')
-            if errors:
-                for error in errors:
-                    flash(error, 'error')
+            success_message = f'Successfully uploaded {len(uploaded_files)} file(s)!'
+            
+            # Return appropriate response based on request type
+            if is_ajax:
+                return jsonify({
+                    'success': True, 
+                    'message': success_message,
+                    'uploaded_files': uploaded_files,
+                    'error_count': len(errors)
+                })
+            else:
+                if uploaded_files:
+                    flash(success_message, 'success')
+                if errors:
+                    for error in errors:
+                        flash(error, 'error')
+                return redirect(url_for('main.dashboard'))
+                
         except Exception as e:
             db.session.rollback()
-            flash(f'Database error: {str(e)}', 'error')
-        
-        return redirect(url_for('main.dashboard'))
+            error_msg = f'Database error: {str(e)}'
+            if is_ajax:
+                return jsonify({'success': False, 'message': error_msg}), 500
+            flash(error_msg, 'error')
+            return redirect(url_for('main.upload'))
     
     return render_template('upload.html')
 
