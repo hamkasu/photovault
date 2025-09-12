@@ -26,3 +26,16 @@ Pillow>=11.0.0
 python-dotenv
 psycopg2-binary
 gunicorn
+blinker==1.7.0
+click==8.1.7
+Flask==3.0.3
+Flask-Login==0.6.3
+Flask-Migrate==4.1.0
+Flask-SQLAlchemy==3.1.1
+itsdangerous==2.2.0
+Jinja2==3.1.4
+MarkupSafe==2.1.5
+Pillow
+psycopg2-binary
+python-dotenv
+Werkzeug==3.0.3
