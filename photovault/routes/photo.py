@@ -316,7 +316,7 @@ def upload():
             'files': uploaded_files
         }), 200
 
-@photo_bp.route('/delete/<int:photo_id>', methods=['DELETE'])
+@photo_bp.route('/photo/delete/<int:photo_id>', methods=['DELETE'])
 @login_required
 def delete_photo(photo_id):
     """Delete a photo with proper cleanup and security checks"""
@@ -368,7 +368,7 @@ def delete_photo(photo_id):
         logger.error(f"Error deleting photo {photo_id} for user {current_user.username}: {e}")
         return jsonify({'error': 'Failed to delete photo', 'details': str(e)}), 500
 
-@photo_bp.route('/bulk-delete', methods=['POST'])
+@photo_bp.route('/photo/bulk-delete', methods=['POST'])
 @login_required
 def bulk_delete_photos():
     """Delete multiple photos at once with proper validation and cleanup"""
