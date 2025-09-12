@@ -201,4 +201,31 @@ CALMIC SDN BHD - "Committed to Excellence"
         </div>
     </div>
 </div>
+
+<script>
+function deletePhoto(photoId) {
+    if (confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+        fetch(`/photo/delete/${photoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Photo deleted successfully!');
+                location.reload();
+            } else {
+                alert('Error deleting photo: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting photo. Please try again.');
+        });
+    }
+}
+</script>
 {% endblock %}
