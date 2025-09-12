@@ -368,6 +368,93 @@ def delete_photo(photo_id):
         logger.error(f"Error deleting photo {photo_id} for user {current_user.username}: {e}")
         return jsonify({'error': 'Failed to delete photo', 'details': str(e)}), 500
 
+@photo_bp.route('/bulk-delete', methods=['POST'])
+@login_required
+def bulk_delete_photos():
+    """Delete multiple photos at once with proper validation and cleanup"""
+    try:
+        data = request.json if request.is_json else request.form
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        photo_ids = data.get('photo_ids', [])
+        if not photo_ids:
+            return jsonify({'error': 'No photo IDs provided'}), 400
+        
+        # Convert to integers and validate
+        try:
+            photo_ids = [int(pid) for pid in photo_ids if pid]
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid photo IDs format'}), 400
+        
+        if len(photo_ids) > 50:  # Safety limit
+            return jsonify({'error': 'Too many photos selected (maximum 50)'}), 400
+        
+        # Get photos owned by current user
+        photos = Photo.query.filter(
+            Photo.id.in_(photo_ids),
+            Photo.user_id == current_user.id
+        ).all()
+        
+        if not photos:
+            return jsonify({'error': 'No photos found or access denied'}), 404
+        
+        # Track deletion results
+        deleted_count = 0
+        file_errors = []
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        
+        # Delete files and database records
+        for photo in photos:
+            try:
+                # Delete original file
+                original_filepath = os.path.join(upload_folder, photo.filename)
+                if os.path.exists(original_filepath):
+                    try:
+                        os.remove(original_filepath)
+                    except OSError as e:
+                        file_errors.append(f"Failed to delete {photo.original_filename}: {str(e)}")
+                
+                # Delete edited file if it exists
+                if photo.edited_filename:
+                    edited_filepath = os.path.join(upload_folder, photo.edited_filename)
+                    if os.path.exists(edited_filepath):
+                        try:
+                            os.remove(edited_filepath)
+                        except OSError as e:
+                            file_errors.append(f"Failed to delete edited version of {photo.original_filename}: {str(e)}")
+                
+                # Delete from database
+                db.session.delete(photo)
+                deleted_count += 1
+                
+            except Exception as e:
+                logger.error(f"Error processing photo {photo.id} for bulk delete: {e}")
+                file_errors.append(f"Failed to process {photo.original_filename}: {str(e)}")
+        
+        # Commit database changes
+        db.session.commit()
+        
+        logger.info(f"User {current_user.username} bulk deleted {deleted_count} photos")
+        
+        response_data = {
+            'success': True,
+            'message': f'Successfully deleted {deleted_count} photo(s)',
+            'deleted_count': deleted_count,
+            'total_requested': len(photo_ids)
+        }
+        
+        if file_errors:
+            response_data['warnings'] = file_errors
+            response_data['message'] += f' (with {len(file_errors)} file deletion warnings)'
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in bulk delete for user {current_user.username}: {e}")
+        return jsonify({'error': 'Failed to delete photos', 'details': str(e)}), 500
+
 @photo_bp.route('/save-edit', methods=['POST'])
 @login_required
 def save_edit():
