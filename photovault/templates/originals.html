@@ -77,29 +77,29 @@ CALMIC SDN BHD - "Committed to Excellence"
                     
                     <div class="btn-group btn-group-sm" role="group">
                         <!-- View photo details -->
-                        <a href="{{ url_for('main.view_photo', photo_id=photo.id) }}" class="btn btn-outline-primary">
-                            <i class="bi bi-eye"></i> View
+                        <a href="{{ url_for('main.view_photo', photo_id=photo.id) }}" class="btn btn-outline-primary" title="View photo details">
+                            <i class="bi bi-eye"></i>
                         </a>
                         <!-- Rename photo -->
-                        <button class="btn btn-outline-info" onclick="toggleGalleryRename({{ photo.id }})">
-                            <i class="bi bi-pencil-square"></i> Rename
+                        <button class="btn btn-outline-info" onclick="toggleGalleryRename({{ photo.id }})" title="Rename photo">
+                            <i class="bi bi-pencil-square"></i>
                         </button>
                         <!-- Edit/Markup photo -->
-                        <a href="{{ url_for('main.editor', photo_id=photo.id) }}" class="btn btn-outline-warning">
-                            <i class="bi bi-pencil"></i> Edit
+                        <a href="{{ url_for('main.editor', photo_id=photo.id) }}" class="btn btn-outline-warning" title="Edit/markup photo">
+                            <i class="bi bi-pencil"></i>
                         </a>
                          <!-- Download the original file -->
-                        <a href="{{ url_for('static', filename='uploads/' + photo.filename) }}" download="{{ photo.original_filename }}" class="btn btn-outline-success">
-                            <i class="bi bi-download"></i> Download
+                        <a href="{{ url_for('static', filename='uploads/' + photo.filename) }}" download="{{ photo.original_filename }}" class="btn btn-outline-success" title="Download original file">
+                            <i class="bi bi-download"></i>
                         </a>
                         <!-- Delete photo -->
-                        <button class="btn btn-outline-danger" onclick="deleteSinglePhoto({{ photo.id }})">
-                            <i class="bi bi-trash"></i> Delete
+                        <button class="btn btn-outline-danger" onclick="deleteSinglePhoto({{ photo.id }})" title="Delete photo">
+                            <i class="bi bi-trash"></i>
                         </button>
                         <!-- Optional: View Active Version (if different) -->
                         {% if photo.edited_filename %}
-                        <a href="{{ url_for('static', filename='uploads/' + photo.edited_filename) }}" target="_blank" class="btn btn-outline-info">
-                            <i class="bi bi-eye"></i> Edited
+                        <a href="{{ url_for('static', filename='uploads/' + photo.edited_filename) }}" target="_blank" class="btn btn-outline-info" title="View edited version">
+                            <i class="bi bi-eye-fill"></i>
                         </a>
                         {% endif %}
                     </div>

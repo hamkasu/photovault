@@ -133,15 +133,15 @@ CALMIC SDN BHD - "Committed to Excellence"
                                 {% endif %}
                                 <div class="photo-actions mt-1">
                                     <a href="{{ url_for('main.view_photo', photo_id=photo.id) }}" 
-                                       class="btn btn-outline-light btn-sm">
+                                       class="btn btn-outline-light btn-sm" title="View photo">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <a href="{{ url_for('main.editor', photo_id=photo.id) }}" 
-                                       class="btn btn-outline-light btn-sm">
+                                       class="btn btn-outline-light btn-sm" title="Edit photo">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <button onclick="deletePhoto({{ photo.id }})" 
-                                            class="btn btn-outline-light btn-sm">
+                                            class="btn btn-outline-light btn-sm" title="Delete photo">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
