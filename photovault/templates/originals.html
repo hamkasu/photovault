@@ -149,17 +149,18 @@ function toggleBulkSelect() {
         checkboxes.forEach(cb => cb.style.display = 'block');
         bulkSelectBtn.innerHTML = '<i class="bi bi-x-square"></i> Cancel Selection';
         bulkSelectBtn.className = 'btn btn-secondary';
-        bulkDeleteBtn.style.display = 'inline-block';
-        bulkSelectInfo.style.display = 'block';
+        if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'inline-block';
+        if (bulkSelectInfo) bulkSelectInfo.style.display = 'block';
     } else {
         checkboxes.forEach(cb => {
             cb.style.display = 'none';
-            cb.querySelector('input').checked = false;
+            const input = cb.querySelector('input');
+            if (input) input.checked = false;
         });
         bulkSelectBtn.innerHTML = '<i class="bi bi-check-square"></i> Select Multiple';
         bulkSelectBtn.className = 'btn btn-outline-secondary';
-        bulkDeleteBtn.style.display = 'none';
-        bulkSelectInfo.style.display = 'none';
+        if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'none';
+        if (bulkSelectInfo) bulkSelectInfo.style.display = 'none';
     }
     updateSelectedCount();
 }
