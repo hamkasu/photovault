@@ -1,0 +1,122 @@
+<!--
+PhotoVault - Professional Photo Management Platform
+Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
+
+This software is proprietary and confidential. Unauthorized copying, distribution,
+modification, or use of this software is strictly prohibited.
+
+Website: https://www.calmic.com.my
+Email: support@calmic.com.my
+
+CALMIC SDN BHD - "Committed to Excellence"
+-->
+
+{% extends "base.html" %}
+
+{% block title %}Upload Photos{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file');
+    const uploadArea = document.getElementById('uploadArea');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    // Simple file selection feedback
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            console.log('File input changed, files:', this.files.length);
+            if (this.files && this.files.length > 0) {
+                const fileCount = this.files.length;
+                const firstFile = this.files[0];
+                console.log('First file:', firstFile.name, firstFile.size);
+                
+                const uploadStatus = document.getElementById('uploadStatus');
+                if (uploadStatus) {
+                    uploadStatus.innerHTML = `
+                        <i class="bi bi-file-image text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-success">${fileCount} File${fileCount > 1 ? 's' : ''} Selected</h5>
+                        <p class="text-muted">${firstFile.name}</p>
+                        <small class="text-success">Ready to upload</small>
+                    `;
+                }
+                if (uploadBtn) uploadBtn.disabled = false;
+            }
+        });
+    }
+    
+    // Simple form submission feedback
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            console.log('Form submitting...');
+            if (uploadBtn) {
+                uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+                uploadBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Click area to open file picker
+    if (uploadArea) {
+        uploadArea.addEventListener('click', function() {
+            if (fileInput) fileInput.click();
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-upload"></i> Upload Photos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="upload-area mb-4" id="uploadArea">
+                            <div id="uploadStatus">
+                                <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #6c757d;"></i>
+                                <h5 class="mt-3">Choose Photos to Upload</h5>
+                                <p class="text-muted">Drag and drop files here, or click to select</p>
+                            </div>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="file" 
+                                   name="files[]" 
+                                   accept="image/*" 
+                                   multiple 
+                                   required>
+                            <small class="form-text text-muted mt-2">
+                                Supported formats: PNG, JPG, JPEG, GIF, WEBP (Max 16MB)
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                <i class="bi bi-upload"></i> Upload Photos
+                            </button>
+                            <small class="text-muted mt-2">Select files and click to upload</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <a href="{{ url_for('main.originals') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-images"></i> View Gallery
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

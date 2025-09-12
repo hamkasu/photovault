@@ -86,6 +86,52 @@ def dashboard():
     
     return render_template('admin/dashboard.html', users_with_stats=users_with_stats, stats=stats)
 
+@admin_bp.route('/api/statistics')
+@login_required
+@admin_required
+def api_statistics():
+    """JSON API endpoint for dashboard statistics"""
+    # Get all users
+    users = User.query.order_by(User.created_at.desc()).all()
+    
+    # Calculate statistics for each user manually 
+    total_storage_all = 0
+    total_photos_all = 0
+    total_edited_all = 0
+    
+    for user in users:
+        # Get user's photos
+        user_photos = Photo.query.filter_by(user_id=user.id).all()
+        
+        # Calculate stats manually
+        total_photos = len(user_photos)
+        edited_photos = 0
+        total_size = 0
+        
+        for photo in user_photos:
+            if photo.edited_filename is not None:
+                edited_photos += 1
+            if photo.file_size:
+                total_size += photo.file_size
+        
+        # Add to totals
+        total_storage_all += total_size
+        total_photos_all += total_photos
+        total_edited_all += edited_photos
+    
+    # Overall statistics
+    total_users = len(users)
+    
+    stats = {
+        'total_users': total_users,
+        'total_photos': total_photos_all,
+        'total_edited': total_edited_all,
+        'total_storage': total_storage_all,
+        'total_storage_mb': round(total_storage_all / (1024 * 1024), 2) if total_storage_all else 0
+    }
+    
+    return jsonify(stats)
+
 @admin_bp.route('/user/<int:user_id>')
 @login_required
 @admin_required

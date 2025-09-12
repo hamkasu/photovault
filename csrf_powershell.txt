@@ -1,0 +1,265 @@
+# PhotoVault CSRF Token Injector - PowerShell Script
+# Calmic Sdn Bhd - September 2025
+# Professional Photo Management Solutions
+
+param(
+    [string]$TemplatesDir = "photovault\templates",
+    [string]$BackupDir = "backup_templates", 
+    [switch]$DryRun,
+    [switch]$Verbose,
+    [switch]$Help
+)
+
+# Set up error handling
+$ErrorActionPreference = "Stop"
+
+# Define colors for output
+$Colors = @{
+    Success = "Green"
+    Warning = "Yellow" 
+    Error = "Red"
+    Info = "Cyan"
+    Highlight = "Magenta"
+}
+
+function Write-ColoredOutput {
+    param(
+        [string]$Message,
+        [string]$Color = "White",
+        [switch]$NoNewline
+    )
+    
+    if ($NoNewline) {
+        Write-Host $Message -ForegroundColor $Color -NoNewline
+    } else {
+        Write-Host $Message -ForegroundColor $Color
+    }
+}
+
+function Show-Header {
+    Write-Host ""
+    Write-ColoredOutput "================================================================" $Colors.Highlight
+    Write-ColoredOutput "PhotoVault CSRF Token Injector (PowerShell)" $Colors.Highlight
+    Write-ColoredOutput "Calmic Sdn Bhd - Professional Photo Management" $Colors.Info
+    Write-ColoredOutput "================================================================" $Colors.Highlight
+    Write-Host ""
+}
+
+function Show-Help {
+    Show-Header
+    Write-ColoredOutput "USAGE:" $Colors.Highlight
+    Write-Host "  .\Add-CSRFTokens.ps1 [OPTIONS]"
+    Write-Host ""
+    Write-ColoredOutput "OPTIONS:" $Colors.Highlight
+    Write-Host "  -TemplatesDir <path>   Templates directory (default: photovault\templates)"
+    Write-Host "  -BackupDir <path>      Backup directory (default: backup_templates)"
+    Write-Host "  -DryRun               Preview changes without modifying files"
+    Write-Host "  -Verbose              Enable detailed output"
+    Write-Host "  -Help                 Show this help message"
+    Write-Host ""
+    Write-ColoredOutput "EXAMPLES:" $Colors.Highlight
+    Write-Host "  .\Add-CSRFTokens.ps1 -DryRun"
+    Write-Host "  .\Add-CSRFTokens.ps1 -TemplatesDir 'C:\path\to\templates'"
+    Write-Host "  .\Add-CSRFTokens.ps1 -TemplatesDir 'photovault\templates' -BackupDir 'my_backups'"
+    Write-Host "  .\Add-CSRFTokens.ps1 -Verbose"
+    Write-Host ""
+    Write-ColoredOutput "DESCRIPTION:" $Colors.Highlight
+    Write-Host "  This script automatically adds CSRF tokens to all POST forms"
+    Write-Host "  in PhotoVault HTML templates for security protection."
+    Write-Host ""
+    Write-ColoredOutput "SAFETY FEATURES:" $Colors.Highlight
+    Write-Host "  - Automatic backups before any modifications"
+    Write-Host "  - Dry-run mode for safe previewing"
+    Write-Host "  - Smart detection of existing CSRF tokens"
+    Write-Host "  - Detailed logging of all changes"
+    Write-Host ""
+    exit 0
+}
+
+function Test-Prerequisites {
+    Write-ColoredOutput "🔍 Checking prerequisites..." $Colors.Info
+    
+    # Check if Python is available
+    try {
+        $pythonVersion = python --version 2>$null
+        if ($pythonVersion) {
+            Write-ColoredOutput "✅ Python found: $pythonVersion" $Colors.Success
+        } else {
+            throw "Python not found"
+        }
+    } catch {
+        Write-ColoredOutput "❌ Python is not installed or not in PATH!" $Colors.Error
+        Write-ColoredOutput "   Please install Python 3.6+ from https://www.python.org/downloads/" $Colors.Warning
+        exit 1
+    }
+    
+    # Check if the Python script exists
+    if (-not (Test-Path "add_csrf_tokens.py")) {
+        Write-ColoredOutput "❌ add_csrf_tokens.py not found in current directory!" $Colors.Error
+        Write-ColoredOutput "   Please ensure the Python script is in the same folder." $Colors.Warning
+        exit 1
+    }
+    
+    Write-ColoredOutput "✅ Prerequisites check passed!" $Colors.Success
+    Write-Host ""
+}
+
+function Test-TemplatesDirectory {
+    param([string]$Path)
+    
+    if (-not (Test-Path $Path)) {
+        Write-ColoredOutput "❌ Templates directory not found: $Path" $Colors.Error
+        Write-ColoredOutput "   Please check the path or use -TemplatesDir parameter." $Colors.Warning
+        return $false
+    }
+    
+    # Check if directory contains HTML files
+    $htmlFiles = Get-ChildItem -Path $Path -Filter "*.html" -Recurse
+    if ($htmlFiles.Count -eq 0) {
+        Write-ColoredOutput "⚠️ No HTML files found in: $Path" $Colors.Warning
+        Write-ColoredOutput "   This might not be the correct templates directory." $Colors.Warning
+        return $false
+    }
+    
+    Write-ColoredOutput "✅ Templates directory verified: $Path" $Colors.Success
+    Write-ColoredOutput "   Found $($htmlFiles.Count) HTML files" $Colors.Info
+    return $true
+}
+
+function Invoke-CSRFInjection {
+    param(
+        [string]$TemplatesPath,
+        [string]$BackupPath,
+        [bool]$IsDryRun,
+        [bool]$IsVerbose
+    )
+    
+    # Build Python command arguments
+    $arguments = @("add_csrf_tokens.py")
+    
+    if ($TemplatesPath -ne "photovault\templates") {
+        $arguments += "--templates-dir", "`"$TemplatesPath`""
+    }
+    
+    if ($BackupPath -ne "backup_templates") {
+        $arguments += "--backup-dir", "`"$BackupPath`""
+    }
+    
+    if ($IsDryRun) {
+        $arguments += "--dry-run"
+    }
+    
+    if ($IsVerbose) {
+        $arguments += "--verbose"
+    }
+    
+    # Show command being executed
+    Write-ColoredOutput "🚀 Executing: python $($arguments -join ' ')" $Colors.Info
+    Write-Host ""
+    
+    # Execute the Python script
+    try {
+        $process = Start-Process -FilePath "python" -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+        
+        if ($process.ExitCode -eq 0) {
+            Write-Host ""
+            Write-ColoredOutput "🎉 CSRF injection completed successfully!" $Colors.Success
+            
+            if ($IsDryRun) {
+                Write-ColoredOutput "   Run without -DryRun to actually modify files." $Colors.Info
+            } else {
+                Write-ColoredOutput "   Backups created in: $BackupPath" $Colors.Info
+                Write-ColoredOutput "   Check the output above for detailed results." $Colors.Info
+            }
+            
+            return $true
+        } else {
+            Write-ColoredOutput "❌ CSRF injection failed with exit code: $($process.ExitCode)" $Colors.Error
+            return $false
+        }
+    } catch {
+        Write-ColoredOutput "❌ Error executing Python script: $($_.Exception.Message)" $Colors.Error
+        return $false
+    }
+}
+
+function Show-PostProcessInstructions {
+    Write-Host ""
+    Write-ColoredOutput "📋 NEXT STEPS:" $Colors.Highlight
+    Write-Host ""
+    Write-ColoredOutput "1. Verify the changes:" $Colors.Info
+    Write-Host "   python verify_csrf_tokens.py"
+    Write-Host ""
+    Write-ColoredOutput "2. Update your PhotoVault application:" $Colors.Info
+    Write-Host "   - Install Flask-WTF: pip install Flask-WTF"
+    Write-Host "   - Add CSRF protection to __init__.py"
+    Write-Host "   - Test form submissions"
+    Write-Host ""
+    Write-ColoredOutput "3. Test your application:" $Colors.Info
+    Write-Host "   - Start PhotoVault"
+    Write-Host "   - Try logging in and uploading photos"
+    Write-Host "   - Verify forms work correctly"
+    Write-Host ""
+    Write-ColoredOutput "Need help? Contact Calmic Sdn Bhd support@calmic.com" $Colors.Info
+}
+
+function Main {
+    # Show help if requested
+    if ($Help) {
+        Show-Help
+    }
+    
+    # Show header
+    Show-Header
+    
+    # Check prerequisites
+    Test-Prerequisites
+    
+    # Validate templates directory
+    if (-not (Test-TemplatesDirectory -Path $TemplatesDir)) {
+        Write-ColoredOutput "❌ Cannot proceed with invalid templates directory." $Colors.Error
+        exit 1
+    }
+    
+    Write-Host ""
+    Write-ColoredOutput "📋 CONFIGURATION:" $Colors.Highlight
+    Write-ColoredOutput "   Templates Directory: $TemplatesDir" $Colors.Info
+    Write-ColoredOutput "   Backup Directory: $BackupDir" $Colors.Info
+    Write-ColoredOutput "   Dry Run Mode: $DryRun" $Colors.Info
+    Write-ColoredOutput "   Verbose Output: $Verbose" $Colors.Info
+    Write-Host ""
+    
+    # Confirm execution (unless dry run)
+    if (-not $DryRun) {
+        Write-ColoredOutput "⚠️ This will modify your HTML template files!" $Colors.Warning
+        Write-ColoredOutput "   Backups will be created automatically." $Colors.Info
+        Write-Host ""
+        
+        $confirmation = Read-Host "Do you want to proceed? (y/N)"
+        if ($confirmation -notmatch "^[Yy]$") {
+            Write-ColoredOutput "❌ Operation cancelled by user." $Colors.Warning
+            exit 0
+        }
+        Write-Host ""
+    }
+    
+    # Execute CSRF injection
+    $success = Invoke-CSRFInjection -TemplatesPath $TemplatesDir -BackupPath $BackupDir -IsDryRun $DryRun -IsVerbose $Verbose
+    
+    if ($success) {
+        Show-PostProcessInstructions
+        exit 0
+    } else {
+        Write-ColoredOutput "❌ CSRF injection failed. Check the output above for details." $Colors.Error
+        exit 1
+    }
+}
+
+# Script execution starts here
+try {
+    Main
+} catch {
+    Write-ColoredOutput "💥 Unexpected error: $($_.Exception.Message)" $Colors.Error
+    Write-ColoredOutput "   Stack trace: $($_.ScriptStackTrace)" $Colors.Error
+    exit 1
+}

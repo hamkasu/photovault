@@ -14,7 +14,7 @@ CALMIC SDN BHD - "Committed to Excellence"
 import os
 from flask import Flask
 import sqlite3
-#from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 
@@ -75,16 +75,41 @@ def create_app():
     """Create and configure the Flask application"""
     app = Flask(__name__)
     
-    # Basic configuration
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///photovault.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'photovault/static/uploads')
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+    # Load production configuration if deployed
+    is_production = os.getenv('REPLIT_DEPLOYMENT') == '1'
+    if is_production:
+        try:
+            from config import ProductionConfig
+            app.config.from_object(ProductionConfig)
+            print("✓ Production configuration loaded")
+        except ImportError:
+            pass
+        
+        # Validate critical production settings
+        if not app.config.get('SECRET_KEY'):
+            secret_key = os.environ.get('SECRET_KEY')
+            if not secret_key:
+                raise RuntimeError("SECRET_KEY must be set in production environment")
+            app.config['SECRET_KEY'] = secret_key
+            
+        if not app.config.get('SQLALCHEMY_DATABASE_URI'):
+            database_url = os.environ.get('DATABASE_URL')
+            if not database_url:
+                raise RuntimeError("DATABASE_URL must be set in production environment")
+            app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        # Development configuration
+        app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///photovault.db')
+    
+    # Common configuration
+    app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
+    app.config.setdefault('UPLOAD_FOLDER', os.getenv('UPLOAD_FOLDER', 'photovault/static/uploads'))
+    app.config.setdefault('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)  # 16MB
     
     # Session configuration
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config.setdefault('SESSION_COOKIE_HTTPONLY', True)
+    app.config.setdefault('SESSION_COOKIE_SAMESITE', 'Lax')
     
     # Initialize extensions with app
     db.init_app(app)
@@ -117,20 +142,29 @@ def create_app():
     except Exception as e:
         print(f"Warning: Error registering blueprints: {e}")
     
-    # Create database tables
+    # Create database tables (skip in production if using migrations)
     with app.app_context():
         try:
-            db.create_all()
-            print("✓ Database tables created")
+            if not is_production:
+                db.create_all()
+                print("✓ Database tables created")
+            else:
+                print("✓ Production mode: skipping db.create_all() (use migrations)")
         except Exception as e:
-            print(f"Warning: Error creating database tables: {e}")
+            print(f"Warning: Error with database setup: {e}")
     
-    # Add basic security headers
+    # Add security headers
     @app.after_request
     def add_security_headers(response):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        # Add production security headers if configured
+        if 'SECURITY_HEADERS' in app.config:
+            for header, value in app.config['SECURITY_HEADERS'].items():
+                response.headers[header] = value
+        
         return response
     
     # --- Company Context Processor ---

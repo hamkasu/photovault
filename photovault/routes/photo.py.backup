@@ -85,11 +85,6 @@ def validate_image_efficiently(file):
                 width, height = img.size
                 format_name = img.format
                 
-                # Check for None dimensions
-                if width is None or height is None:
-                    file.seek(pos)
-                    return False, "Could not determine image dimensions"
-                
                 # Validate dimensions (prevent zip bombs and excessive memory usage)
                 if width * height > MAX_IMAGE_PIXELS:
                     file.seek(pos)
@@ -225,13 +220,6 @@ def upload():
                 try:
                     with Image.open(filepath) as img:
                         width, height = img.size
-                    
-                    # Validate dimensions are not None
-                    if width is None or height is None:
-                        if os.path.exists(filepath):
-                            os.remove(filepath)
-                        errors.append(f"File '{file.filename}': Could not determine image dimensions")
-                        continue
                     
                     file_size = os.path.getsize(filepath)
                     

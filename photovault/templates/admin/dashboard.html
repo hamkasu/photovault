@@ -218,4 +218,65 @@ CALMIC SDN BHD - "Committed to Excellence"
     }
 }
 </style>
+
+<script>
+// Ensure statistics are populated on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Only run on admin dashboard page
+    if (!window.location.pathname.includes('/admin/dashboard')) {
+        return;
+    }
+    
+    // Fetch statistics from JSON API
+    fetch('/admin/api/statistics')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch statistics');
+            }
+            return response.json();
+        })
+        .then(stats => {
+            // Update statistics cards with fetched data
+            updateStatisticsCards(stats);
+        })
+        .catch(error => {
+            console.error('Error fetching admin statistics:', error);
+            // Keep server-rendered values if AJAX fails
+        });
+});
+
+function updateStatisticsCards(stats) {
+    // Update Total Users card (blue/primary)
+    const totalUsersElement = document.querySelector('.card.bg-primary h4');
+    if (totalUsersElement && stats.total_users !== undefined) {
+        totalUsersElement.textContent = stats.total_users;
+        totalUsersElement.style.color = '#ffffff';
+        totalUsersElement.style.fontWeight = 'bold';
+    }
+    
+    // Update Total Photos card (green/success)
+    const totalPhotosElement = document.querySelector('.card.bg-success h4');
+    if (totalPhotosElement && stats.total_photos !== undefined) {
+        totalPhotosElement.textContent = stats.total_photos;
+        totalPhotosElement.style.color = '#ffffff';
+        totalPhotosElement.style.fontWeight = 'bold';
+    }
+    
+    // Update Edited Photos card (yellow/warning)
+    const editedPhotosElement = document.querySelector('.card.bg-warning h4');
+    if (editedPhotosElement && stats.total_edited !== undefined) {
+        editedPhotosElement.textContent = stats.total_edited;
+        editedPhotosElement.style.color = '#ffffff';
+        editedPhotosElement.style.fontWeight = 'bold';
+    }
+    
+    // Update Total Storage card (teal/info)
+    const totalStorageElement = document.querySelector('.card.bg-info h4');
+    if (totalStorageElement && stats.total_storage_mb !== undefined) {
+        totalStorageElement.textContent = stats.total_storage_mb + ' MB';
+        totalStorageElement.style.color = '#ffffff';
+        totalStorageElement.style.fontWeight = 'bold';
+    }
+}
+</script>
 {% endblock %}
