@@ -24,6 +24,9 @@ CALMIC SDN BHD - "Committed to Excellence"
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- Add to head section -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- CSRF Token for JavaScript requests -->
     {% if csrf_token %}

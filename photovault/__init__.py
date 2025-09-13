@@ -17,6 +17,9 @@ import sqlite3
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
+# Add this import near the top with other imports
+from flask_wtf.csrf import CSRFProtect
+
 
 # Try to load dotenv, but don't fail if it's not available
 try:
@@ -74,7 +77,10 @@ migrate = Migrate()
 def create_app():
     """Create and configure the Flask application"""
     app = Flask(__name__)
-    
+
+    csrf = CSRFProtect()
+    csrf.init_app(app)
+
     # Load production configuration if deployed
     is_production = os.getenv('REPLIT_DEPLOYMENT') == '1'
     if is_production:
@@ -106,6 +112,11 @@ def create_app():
     app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
     app.config.setdefault('UPLOAD_FOLDER', os.getenv('UPLOAD_FOLDER', 'photovault/static/uploads'))
     app.config.setdefault('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)  # 16MB
+
+    # Add digitization configuration here
+    app.config.setdefault('DIGITIZATION_ENABLED', True)
+    app.config.setdefault('BATCH_SIZE_LIMIT', 50)
+    app.config.setdefault('QUALITY_THRESHOLD', 7.0)
     
     # Session configuration
     app.config.setdefault('SESSION_COOKIE_HTTPONLY', True)
@@ -131,12 +142,14 @@ def create_app():
         from photovault.routes.photo import photo_bp
         from photovault.routes.admin import admin_bp
         from photovault.routes.superuser import superuser_bp
+        from photovault.routes.digitization import digitization_bp  # Add this line
         
         app.register_blueprint(auth_bp)
         app.register_blueprint(main_bp) 
         app.register_blueprint(photo_bp)
         app.register_blueprint(admin_bp)
         app.register_blueprint(superuser_bp)
+        app.register_blueprint(digitization_bp)  # Add this line
         
         print("✓ All blueprints registered successfully")
     except Exception as e:

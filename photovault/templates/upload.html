@@ -214,6 +214,52 @@ Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
         <!-- Dynamic content will be inserted here -->
     </div>
 </div>
+
+<!-- Enhanced camera interface for photo digitization -->
+
+<!-- Add camera overlay section -->
+<div class="camera-controls">
+    <div class="digitization-mode">
+        <label>
+            <input type="checkbox" id="digitizationMode"> Photo Digitization Mode
+        </label>
+    </div>
+    
+    <div class="batch-controls" style="display: none;">
+        <input type="text" id="batchName" placeholder="Batch name (e.g., Family Photos 1960s)">
+        <span>Photo <span id="batchCount">1</span> of batch</span>
+    </div>
+</div>
+
+<!-- Camera preview with overlay guides -->
+<div class="camera-preview-enhanced">
+    <canvas id="overlayCanvas"></canvas>
+    <div class="alignment-guide">
+        <div class="corner-guides">
+            <div class="corner top-left"></div>
+            <div class="corner top-right"></div>
+            <div class="corner bottom-left"></div>
+            <div class="corner bottom-right"></div>
+        </div>
+        <div class="grid-overlay"></div>
+    </div>
+    
+    <div class="capture-feedback">
+        <div id="lightingIndicator">💡 Lighting: <span class="status">Good</span></div>
+        <div id="steadyIndicator">📱 Hold Steady: <span class="status">Ready</span></div>
+        <div id="focusIndicator">🔍 Focus: <span class="status">Sharp</span></div>
+    </div>
+</div>
+
+<!-- Processing options -->
+<div class="processing-options" style="display: none;">
+    <h6>Auto-enhancements</h6>
+    <label><input type="checkbox" id="autoCrop" checked> Auto-crop photo edges</label>
+    <label><input type="checkbox" id="perspectiveCorrect" checked> Fix perspective</label>
+    <label><input type="checkbox" id="colorEnhance" checked> Enhance colors</label>
+    <label><input type="checkbox" id="sharpen" checked> Sharpen image</label>
+</div>
+
 {% endblock %}
 {% block extra_js %}
 <!-- Load the fixed upload JavaScript -->

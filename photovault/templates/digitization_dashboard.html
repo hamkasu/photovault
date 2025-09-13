@@ -1,0 +1,27 @@
+<!-- Specialized dashboard for photo digitization projects -->
+{% extends "base.html" %}
+{% block title %}Photo Digitization Dashboard{% endblock %}
+
+{% block content %}
+<div class="digitization-dashboard">
+    <div class="project-overview">
+        <h2>Digitization Projects</h2>
+        
+        <div class="stats-cards">
+            <div class="card">
+                <h4>{{ stats.total_digitized }}</h4>
+                <p>Photos Digitized</p>
+            </div>
+            <div class="card">
+                <h4>{{ stats.active_batches }}</h4>
+                <p>Active Projects</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="batch-management">
+        <h3>Photo Batches</h3>
+        <!-- Batch organization interface -->
+    </div>
+</div>
+{% endblock %}

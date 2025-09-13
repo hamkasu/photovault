@@ -39,3 +39,19 @@ Pillow
 psycopg2-binary
 python-dotenv
 Werkzeug==3.0.3
+
+# Add computer vision libraries
+opencv-python==4.8.1.78
+numpy==1.24.3
+scikit-image==0.21.0
+
+# Add to requirements.txt
+Flask-WTF==1.1.1
+
+# Add to __init__.py
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect()
+csrf.init_app(app)
+
+# Update forms in templates
+{{ csrf_token() }}

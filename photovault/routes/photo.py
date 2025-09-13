@@ -641,6 +641,22 @@ def download(photo_id):
             download_name=download_name,
             conditional=True  # Enable conditional requests for better performance
         )
+    
+
+    # Add image processing functions
+    def auto_crop_photo(image):
+    """Detect photo edges and crop automatically"""
+    
+    def enhance_scanned_photo(image):
+    """Apply digitization-specific enhancements"""
+    
+    def detect_perspective_distortion(image):
+    """Fix angled shots with perspective correction"""
+    
+    def extract_photo_metadata(image):
+    """Extract decade, format type, estimated date"""
+
+# Modify upload endpoint to apply processing
         
     except Exception as e:
         logger.error(f"Error downloading photo {photo_id}: {e}")

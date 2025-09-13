@@ -21,6 +21,24 @@ from datetime import datetime
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Add new fields to Photo model
+class Photo(db.Model):
+    # Existing fields...
+    
+    # New digitization fields
+    is_digitized = db.Column(db.Boolean, default=False)
+    original_photo_decade = db.Column(db.String(10))  # "1960s", "1970s", etc.
+    photo_format = db.Column(db.String(20))  # "polaroid", "35mm", "instant", etc.
+    scanning_device = db.Column(db.String(50))  # "mobile_camera", "scanner", etc.
+    processing_applied = db.Column(db.JSON)  # Track which enhancements were applied
+    quality_score = db.Column(db.Float)  # Auto-assessed quality (0-10)
+    detected_faces = db.Column(db.Integer, default=0)
+    color_profile = db.Column(db.String(20))  # "color", "bw", "sepia"
+    
+    # Batch organization
+    batch_id = db.Column(db.String(50))  # Group related photos
+    batch_sequence = db.Column(db.Integer)  # Order within batch
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)

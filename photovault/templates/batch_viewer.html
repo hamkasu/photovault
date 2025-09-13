@@ -1,0 +1,19 @@
+<!-- View and organize batches of digitized photos -->
+{% extends "base.html" %}
+{% block title %}{{ batch_name }} - Batch Viewer{% endblock %}
+
+{% block content %}
+<div class="batch-viewer">
+    <div class="batch-header">
+        <h2>{{ batch_name }}</h2>
+        <div class="batch-actions">
+            <button class="btn btn-primary" onclick="exportBatch()">Export All</button>
+            <button class="btn btn-success" onclick="shareFamily()">Share with Family</button>
+        </div>
+    </div>
+    
+    <div class="photo-timeline">
+        <!-- Chronological organization of photos -->
+    </div>
+</div>
+{% endblock %}
