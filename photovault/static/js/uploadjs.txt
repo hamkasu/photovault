@@ -1,0 +1,565 @@
+/**
+ * PhotoVault Upload & Camera Handler - Clean Implementation
+ * Fixes all conflicting implementations and provides unified functionality
+ */
+
+class PhotoVaultUploader {
+    constructor() {
+        // State management
+        this.selectedFiles = [];
+        this.capturedPhotos = [];
+        this.isUploading = false;
+        this.currentStream = null;
+        this.availableCameras = [];
+        this.maxFileSize = 16 * 1024 * 1024; // 16MB
+        this.allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        
+        this.init();
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content 
+               || document.querySelector('input[name="csrf_token"]')?.value;
+if (csrfToken) {
+  xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+  formData.append('csrf_token', csrfToken);
+}
+    
+    init() {
+        console.log('PhotoVault Uploader: Initializing...');
+        this.bindEvents();
+        this.initializeCamera().catch(err => {
+            console.warn('Camera initialization failed:', err);
+        });
+    }
+    
+    bindEvents() {
+        // File input events
+        const fileInput = document.getElementById('file');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadArea = document.getElementById('uploadArea');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => this.handleFileSelection(e));
+        }
+        
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
+        }
+        
+        if (uploadArea) {
+            // Click to select files
+            uploadArea.addEventListener('click', (e) => {
+                if (e.target !== fileInput) {
+                    fileInput?.click();
+                }
+            });
+            
+            // Drag and drop
+            this.setupDragAndDrop(uploadArea);
+        }
+        
+        // Camera events
+        this.bindCameraEvents();
+    }
+    
+    bindCameraEvents() {
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const cameraSelect = document.getElementById('cameraSelect');
+        
+        if (startCameraBtn) {
+            startCameraBtn.addEventListener('click', () => this.startCamera());
+        }
+        
+        if (captureBtn) {
+            captureBtn.addEventListener('click', () => this.capturePhoto());
+        }
+        
+        if (cameraSelect) {
+            cameraSelect.addEventListener('change', () => this.onCameraSelected());
+        }
+    }
+    
+    async initializeCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            console.log('Camera not supported');
+            this.disableCameraUI('Camera not supported in this browser');
+            return;
+        }
+        
+        try {
+            // Request permission and enumerate devices
+            await navigator.mediaDevices.getUserMedia({ video: true });
+            await this.enumerateCameras();
+        } catch (error) {
+            console.error('Camera initialization error:', error);
+            this.disableCameraUI('Camera permission denied');
+        }
+    }
+    
+    async enumerateCameras() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+            
+            const cameraSelect = document.getElementById('cameraSelect');
+            if (cameraSelect && this.availableCameras.length > 0) {
+                cameraSelect.innerHTML = '<option value="">Select Camera...</option>';
+                this.availableCameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = camera.deviceId;
+                    option.textContent = camera.label || `Camera ${index + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+                
+                // Auto-select first camera
+                if (this.availableCameras.length === 1) {
+                    cameraSelect.value = this.availableCameras[0].deviceId;
+                }
+            } else {
+                this.disableCameraUI('No cameras found');
+            }
+        } catch (error) {
+            console.error('Error enumerating cameras:', error);
+            this.disableCameraUI('Could not access cameras');
+        }
+    }
+    
+    disableCameraUI(message) {
+        const cameraSelect = document.getElementById('cameraSelect');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        
+        if (cameraSelect) {
+            cameraSelect.innerHTML = `<option value="">${message}</option>`;
+            cameraSelect.disabled = true;
+        }
+        
+        if (startCameraBtn) {
+            startCameraBtn.disabled = true;
+            startCameraBtn.textContent = message;
+        }
+    }
+    
+    onCameraSelected() {
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const cameraSelect = document.getElementById('cameraSelect');
+        
+        if (startCameraBtn && cameraSelect) {
+            startCameraBtn.disabled = !cameraSelect.value;
+        }
+    }
+    
+    async startCamera() {
+        const cameraSelect = document.getElementById('cameraSelect');
+        const video = document.getElementById('cameraVideo');
+        const captureBtn = document.getElementById('captureBtn');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        
+        if (!cameraSelect?.value) {
+            this.showMessage('Please select a camera', 'warning');
+            return;
+        }
+        
+        try {
+            // Stop existing stream
+            this.stopCamera();
+            
+            const constraints = {
+                video: {
+                    deviceId: { exact: cameraSelect.value },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+            
+            this.currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            if (video) {
+                video.srcObject = this.currentStream;
+                video.style.display = 'block';
+            }
+            
+            if (captureBtn) {
+                captureBtn.style.display = 'block';
+            }
+            
+            if (startCameraBtn) {
+                startCameraBtn.textContent = 'Stop Camera';
+                startCameraBtn.onclick = () => this.stopCamera();
+            }
+            
+            this.showMessage('Camera started successfully', 'success');
+        } catch (error) {
+            console.error('Camera start error:', error);
+            this.handleCameraError(error);
+        }
+    }
+    
+    stopCamera() {
+        if (this.currentStream) {
+            this.currentStream.getTracks().forEach(track => track.stop());
+            this.currentStream = null;
+        }
+        
+        const video = document.getElementById('cameraVideo');
+        const captureBtn = document.getElementById('captureBtn');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        
+        if (video) {
+            video.style.display = 'none';
+            video.srcObject = null;
+        }
+        
+        if (captureBtn) {
+            captureBtn.style.display = 'none';
+        }
+        
+        if (startCameraBtn) {
+            startCameraBtn.textContent = 'Start Camera';
+            startCameraBtn.onclick = () => this.startCamera();
+        }
+    }
+    
+    handleCameraError(error) {
+        let message = 'Camera error occurred';
+        
+        switch (error.name) {
+            case 'NotAllowedError':
+                message = 'Camera permission denied. Please allow camera access and try again.';
+                break;
+            case 'NotFoundError':
+                message = 'No camera found. Please check your camera connection.';
+                break;
+            case 'NotReadableError':
+                message = 'Camera is being used by another application.';
+                break;
+            case 'OverconstrainedError':
+                message = 'Camera constraints not supported. Try a different camera.';
+                break;
+        }
+        
+        this.showMessage(message, 'error');
+    }
+    
+    capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('captureCanvas');
+        
+        if (!video || !canvas || !this.currentStream) {
+            this.showMessage('Camera not ready', 'error');
+            return;
+        }
+        
+        const context = canvas.getContext('2d');
+        
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        if (canvas.width === 0 || canvas.height === 0) {
+            this.showMessage('Could not capture photo - invalid dimensions', 'error');
+            return;
+        }
+        
+        // Draw current frame
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob and upload
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                this.showMessage('Failed to capture photo', 'error');
+                return;
+            }
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const file = new File([blob], `camera-photo-${timestamp}.jpg`, { type: 'image/jpeg' });
+            
+            this.capturedPhotos.push(file);
+            this.selectedFiles.push(file);
+            this.updateFileDisplay();
+            this.showMessage('Photo captured successfully!', 'success');
+            
+        }, 'image/jpeg', 0.9);
+    }
+    
+    handleFileSelection(event) {
+        const files = Array.from(event.target.files || []);
+        
+        if (files.length === 0) {
+            return;
+        }
+        
+        const validFiles = this.validateFiles(files);
+        
+        if (validFiles.length === 0) {
+            this.showMessage('No valid image files selected', 'warning');
+            return;
+        }
+        
+        this.selectedFiles = [...this.selectedFiles, ...validFiles];
+        this.updateFileDisplay();
+        
+        const message = validFiles.length === 1 
+            ? `Selected: ${validFiles[0].name}`
+            : `Selected ${validFiles.length} files`;
+        this.showMessage(message, 'success');
+    }
+    
+    validateFiles(files) {
+        const validFiles = [];
+        const errors = [];
+        
+        files.forEach(file => {
+            if (!this.allowedTypes.includes(file.type.toLowerCase())) {
+                errors.push(`${file.name}: Invalid file type`);
+                return;
+            }
+            
+            if (file.size > this.maxFileSize) {
+                errors.push(`${file.name}: File too large (max 16MB)`);
+                return;
+            }
+            
+            validFiles.push(file);
+        });
+        
+        if (errors.length > 0) {
+            this.showMessage(errors.join('<br>'), 'warning');
+        }
+        
+        return validFiles;
+    }
+    
+    updateFileDisplay() {
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadBtn = document.getElementById('uploadBtn');
+        
+        if (this.selectedFiles.length === 0) {
+            if (uploadStatus) {
+                uploadStatus.innerHTML = `
+                    <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #6c757d;"></i>
+                    <h5 class="mt-3">Choose Photos to Upload</h5>
+                    <p class="text-muted">Drag and drop files here, or click to select</p>
+                `;
+            }
+            if (uploadBtn) uploadBtn.disabled = true;
+            return;
+        }
+        
+        const fileCount = this.selectedFiles.length;
+        const capturedCount = this.capturedPhotos.length;
+        const firstFile = this.selectedFiles[0];
+        
+        let statusText = `${fileCount} file${fileCount > 1 ? 's' : ''} selected`;
+        if (capturedCount > 0) {
+            statusText += ` (${capturedCount} captured from camera)`;
+        }
+        
+        if (uploadStatus) {
+            uploadStatus.innerHTML = `
+                <i class="bi bi-file-image text-success" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-success">${statusText}</h5>
+                <p class="text-muted">${firstFile.name}</p>
+                <small class="text-success">Ready to upload</small>
+            `;
+        }
+        
+        if (uploadBtn) uploadBtn.disabled = false;
+    }
+    
+    setupDragAndDrop(uploadArea) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('dragover');
+            });
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('dragover');
+            });
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                const validFiles = this.validateFiles(files);
+                if (validFiles.length > 0) {
+                    this.selectedFiles = [...this.selectedFiles, ...validFiles];
+                    this.updateFileDisplay();
+                    this.showMessage(`Added ${validFiles.length} files via drag and drop`, 'success');
+                }
+            }
+        });
+    }
+    
+    async handleFormSubmit(event) {
+        event.preventDefault();
+        
+        if (this.selectedFiles.length === 0) {
+            this.showMessage('Please select files to upload', 'warning');
+            return;
+        }
+        
+        if (this.isUploading) {
+            return;
+        }
+        
+        await this.uploadFiles();
+    }
+    
+    async uploadFiles() {
+        this.isUploading = true;
+        this.showProgress();
+        
+        const uploadBtn = document.getElementById('uploadBtn');
+        if (uploadBtn) {
+            uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+            uploadBtn.disabled = true;
+        }
+        
+        try {
+            const formData = new FormData();
+            
+            // Add files
+            this.selectedFiles.forEach(file => {
+                formData.append('files[]', file);
+            });
+            
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                const uploadedCount = data.files ? data.files.length : this.selectedFiles.length;
+                const capturedCount = this.capturedPhotos.length;
+                
+                let message = `Successfully uploaded ${uploadedCount} file${uploadedCount > 1 ? 's' : ''}!`;
+                if (capturedCount > 0) {
+                    message += ` (${capturedCount} captured from camera)`;
+                }
+                
+                this.showMessage(message, 'success');
+                this.resetForm();
+                
+                // Redirect to dashboard after short delay
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 2000);
+            } else {
+                const errorMessage = data.message || 'Upload failed';
+                this.showMessage(errorMessage, 'error');
+                
+                if (data.errors && data.errors.length > 0) {
+                    this.showMessage(data.errors.join('<br>'), 'warning');
+                }
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            this.showMessage(`Upload error: ${error.message}`, 'error');
+        } finally {
+            this.isUploading = false;
+            this.hideProgress();
+            
+            if (uploadBtn) {
+                uploadBtn.innerHTML = '<i class="bi bi-upload"></i> Upload Photos';
+                uploadBtn.disabled = false;
+            }
+        }
+    }
+    
+    resetForm() {
+        this.selectedFiles = [];
+        this.capturedPhotos = [];
+        
+        const fileInput = document.getElementById('file');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+        
+        this.updateFileDisplay();
+        this.stopCamera();
+    }
+    
+    showProgress() {
+        const progressElement = document.getElementById('uploadProgress');
+        if (progressElement) {
+            progressElement.style.display = 'block';
+            progressElement.className = 'alert alert-info mt-3';
+            progressElement.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading photos...';
+        }
+    }
+    
+    hideProgress() {
+        const progressElement = document.getElementById('uploadProgress');
+        if (progressElement) {
+            setTimeout(() => {
+                progressElement.style.display = 'none';
+            }, 3000);
+        }
+    }
+    
+    showMessage(message, type = 'info') {
+        const progressElement = document.getElementById('uploadProgress');
+        if (!progressElement) return;
+        
+        const alertClass = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        }[type] || 'alert-info';
+        
+        const icon = {
+            'success': 'bi-check-circle-fill',
+            'error': 'bi-exclamation-triangle-fill',
+            'warning': 'bi-exclamation-circle-fill',
+            'info': 'bi-info-circle-fill'
+        }[type] || 'bi-info-circle-fill';
+        
+        progressElement.style.display = 'block';
+        progressElement.className = `alert ${alertClass} mt-3`;
+        progressElement.innerHTML = `<i class="bi ${icon}"></i> ${message}`;
+        
+        // Auto-hide success/info messages
+        if (type === 'success' || type === 'info') {
+            setTimeout(() => {
+                progressElement.style.display = 'none';
+            }, 5000);
+        }
+    }
+    
+    // Cleanup method
+    destroy() {
+        this.stopCamera();
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('PhotoVault: Initializing upload system...');
+    
+    // Ensure only one instance
+    if (window.photoVaultUploader) {
+        window.photoVaultUploader.destroy();
+    }
+    
+    window.photoVaultUploader = new PhotoVaultUploader();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.photoVaultUploader) {
+        window.photoVaultUploader.destroy();
+    }
+});
