@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>PhotoVault - Upload Photos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Full Screen Camera Styles */
+        .camera-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .camera-fullscreen.active {
+            display: flex;
+        }
+
+        .camera-fullscreen video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: crosshair;
+        }
+
+        .camera-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .camera-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 10000;
+        }
+
+        .capture-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10001;
+            transition: opacity 0.1s;
+        }
+
+        .capture-indicator.flash {
+            opacity: 0.8;
+        }
+
+        .btn-camera {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+
+        .btn-camera:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+
+        .close-camera {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-camera:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .camera-select-fullscreen {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Orientation lock styles */
+        @media screen and (orientation: portrait) {
+            .landscape-prompt {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.9);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                z-index: 10002;
+            }
+        }
+
+        /* Hide landscape prompt in landscape mode */
+        @media screen and (orientation: landscape) {
+            .landscape-prompt {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">
+                                <i class="fas fa-camera me-2"></i>
+                                PhotoVault - Upload Photos
+                            </h4>
+                            <a href="/dashboard" class="btn btn-light btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Gallery
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Camera Section -->
+                        <div class="mb-4">
+                            <h5>📷 Camera Capture</h5>
+                            <div id="camera-warning" class="alert alert-warning" style="display: none;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Please select a camera first
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="camera-select" class="form-label">Select Camera:</label>
+                                    <select id="camera-select" class="form-select">
+                                        <option value="">Loading cameras...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <button id="start-camera-btn" class="btn btn-camera text-white me-2" disabled>
+                                        <i class="fas fa-video me-2"></i>Start Full Screen Camera
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload Section -->
+                        <div class="mb-4">
+                            <h5>📁 File Upload</h5>
+                            <div class="upload-area border-2 border-dashed border-primary rounded p-4 text-center">
+                                <input type="file" id="file-input" class="d-none" multiple accept="image/*">
+                                <label for="file-input" class="d-block cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <p class="mb-0">Click to select files or drag and drop</p>
+                                    <small class="text-muted">Supports: JPG, PNG, GIF, WEBP (Max: 16MB each)</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div id="upload-progress" class="mb-4" style="display: none;">
+                            <h6>Upload Progress</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="upload-status" class="small text-muted"></div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="upload-results"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Screen Camera Modal -->
+    <div id="camera-fullscreen" class="camera-fullscreen">
+        <div class="camera-controls">
+            <select id="camera-select-fullscreen" class="camera-select-fullscreen">
+                <option value="">Select Camera...</option>
+            </select>
+            <div class="close-camera" id="close-camera">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        
+        <video id="camera-video" autoplay muted playsinline></video>
+        
+        <div class="camera-info">
+            <div><i class="fas fa-hand-pointer"></i> Tap anywhere on screen to capture photo</div>
+            <div class="mt-1"><small>Rotate device to landscape for best experience</small></div>
+        </div>
+        
+        <!-- Landscape prompt for portrait mode -->
+        <div class="landscape-prompt">
+            <i class="fas fa-mobile-alt fa-2x mb-3"></i>
+            <h5>Please rotate your device</h5>
+            <p>For the best camera experience, please rotate your device to landscape mode.</p>
+        </div>
+        
+        <!-- Capture flash effect -->
+        <div id="capture-indicator" class="capture-indicator"></div>
+    </div>
+
+    <!-- Canvas for photo processing (hidden) -->
+    <canvas id="photo-canvas" style="display: none;"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        class PhotoVaultUploader {
+            constructor() {
+                console.log('🚀 Initializing PhotoVault with Enhanced Full Screen Camera');
+                
+                this.cameraSelect = document.getElementById('camera-select');
+                this.cameraSelectFullscreen = document.getElementById('camera-select-fullscreen');
+                this.startCameraBtn = document.getElementById('start-camera-btn');
+                this.cameraVideo = document.getElementById('camera-video');
+                this.cameraFullscreen = document.getElementById('camera-fullscreen');
+                this.closeCameraBtn = document.getElementById('close-camera');
+                this.photoCanvas = document.getElementById('photo-canvas');
+                this.captureIndicator = document.getElementById('capture-indicator');
+                this.fileInput = document.getElementById('file-input');
+                this.cameraWarning = document.getElementById('camera-warning');
+                
+                this.availableCameras = [];
+                this.currentStream = null;
+                this.isFullscreen = false;
+                
+                this.initializeCamera();
+                this.setupEventListeners();
+                this.setupFileUpload();
+            }
+
+            async initializeCamera() {
+                try {
+                    // Request camera permissions and enumerate devices
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream.getTracks().forEach(track => track.stop()); // Stop temporary stream
+                    
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+                    
+                    console.log(`Found ${this.availableCameras.length} cameras`);
+                    this.populateCameraSelect();
+                    
+                    if (this.availableCameras.length > 0) {
+                        this.hideWarning();
+                        this.enableCameraButton();
+                    } else {
+                        this.showWarning('No cameras found on this device');
+                    }
+                } catch (error) {
+                    console.error('Failed to initialize camera:', error);
+                    this.showWarning('Camera access denied or not available');
+                }
+            }
+
+            populateCameraSelect() {
+                // Update both select elements
+                [this.cameraSelect, this.cameraSelectFullscreen].forEach(select => {
+                    if (!select) return;
+                    
+                    select.innerHTML = '<option value="">Select Camera...</option>';
+                    
+                    this.availableCameras.forEach((camera, index) => {
+                        const option = document.createElement('option');
+                        option.value = camera.deviceId;
+                        
+                        let cameraName = camera.label || `Camera ${index + 1}`;
+                        if (index === 0 && !camera.label) cameraName += ' (Default)';
+                        
+                        option.textContent = cameraName;
+                        select.appendChild(option);
+                    });
+                    
+                    // Auto-select first camera
+                    if (this.availableCameras.length > 0) {
+                        select.value = this.availableCameras[0].deviceId;
+                    }
+                });
+            }
+
+            setupEventListeners() {
+                // Start camera button
+                this.startCameraBtn.addEventListener('click', () => this.enterFullScreenCamera());
+                
+                // Close camera button
+                this.closeCameraBtn.addEventListener('click', () => this.exitFullScreenCamera());
+                
+                // Camera selection change
+                this.cameraSelect.addEventListener('change', (e) => {
+                    this.cameraSelectFullscreen.value = e.target.value;
+                    if (this.isFullscreen) {
+                        this.switchCamera(e.target.value);
+                    }
+                });
+                
+                this.cameraSelectFullscreen.addEventListener('change', (e) => {
+                    this.cameraSelect.value = e.target.value;
+                    if (this.isFullscreen) {
+                        this.switchCamera(e.target.value);
+                    }
+                });
+                
+                // Video tap to capture
+                this.cameraVideo.addEventListener('click', (e) => {
+                    if (this.isFullscreen) {
+                        this.capturePhoto();
+                    }
+                });
+                
+                // Prevent video context menu
+                this.cameraVideo.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (this.isFullscreen) {
+                        if (e.key === 'Escape') {
+                            this.exitFullScreenCamera();
+                        } else if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault();
+                            this.capturePhoto();
+                        }
+                    }
+                });
+
+                // Screen orientation change
+                screen.orientation?.addEventListener('change', () => {
+                    if (this.isFullscreen) {
+                        console.log('Orientation changed to:', screen.orientation.type);
+                    }
+                });
+            }
+
+            async enterFullScreenCamera() {
+                try {
+                    const selectedCameraId = this.cameraSelect.value;
+                    if (!selectedCameraId) {
+                        this.showWarning('Please select a camera first');
+                        return;
+                    }
+
+                    console.log('Entering full screen camera mode');
+                    
+                    // Request landscape orientation lock
+                    try {
+                        if (screen.orientation && screen.orientation.lock) {
+                            await screen.orientation.lock('landscape');
+                            console.log('Locked to landscape orientation');
+                        }
+                    } catch (orientationError) {
+                        console.log('Orientation lock not supported or failed:', orientationError);
+                    }
+                    
+                    // Start camera stream
+                    await this.startCamera(selectedCameraId);
+                    
+                    // Enter full screen
+                    this.cameraFullscreen.classList.add('active');
+                    this.isFullscreen = true;
+                    
+                    // Hide page scroll bars
+                    document.body.style.overflow = 'hidden';
+                    
+                    console.log('Full screen camera activated');
+                } catch (error) {
+                    console.error('Failed to start full screen camera:', error);
+                    alert('Failed to start camera: ' + error.message);
+                }
+            }
+
+            async exitFullScreenCamera() {
+                console.log('Exiting full screen camera mode');
+                
+                // Stop camera stream
+                if (this.currentStream) {
+                    this.currentStream.getTracks().forEach(track => track.stop());
+                    this.currentStream = null;
+                }
+                
+                // Exit full screen
+                this.cameraFullscreen.classList.remove('active');
+                this.isFullscreen = false;
+                
+                // Restore page scroll bars
+                document.body.style.overflow = '';
+                
+                // Unlock orientation
+                try {
+                    if (screen.orientation && screen.orientation.unlock) {
+                        screen.orientation.unlock();
+                        console.log('Unlocked screen orientation');
+                    }
+                } catch (orientationError) {
+                    console.log('Orientation unlock not supported or failed:', orientationError);
+                }
+                
+                console.log('Full screen camera deactivated');
+            }
+
+            async startCamera(deviceId) {
+                try {
+                    const constraints = {
+                        video: {
+                            deviceId: deviceId,
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            facingMode: 'environment'
+                        }
+                    };
+
+                    this.currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.cameraVideo.srcObject = this.currentStream;
+                    
+                    console.log('Camera started successfully');
+                } catch (error) {
+                    console.error('Failed to start camera:', error);
+                    throw error;
+                }
+            }
+
+            async switchCamera(deviceId) {
+                if (!deviceId || !this.isFullscreen) return;
+                
+                console.log('Switching to camera:', deviceId);
+                
+                // Stop current stream
+                if (this.currentStream) {
+                    this.currentStream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Start new camera
+                await this.startCamera(deviceId);
+            }
+
+            async capturePhoto() {
+                if (!this.currentStream || !this.isFullscreen) return;
+                
+                console.log('📸 Capturing photo...');
+                
+                // Show capture flash effect
+                this.captureIndicator.classList.add('flash');
+                setTimeout(() => {
+                    this.captureIndicator.classList.remove('flash');
+                }, 100);
+                
+                // Vibrate if supported
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                try {
+                    // Get video dimensions
+                    const video = this.cameraVideo;
+                    const canvas = this.photoCanvas;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Set canvas size to video dimensions
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    // Draw current video frame to canvas
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to blob
+                    canvas.toBlob(async (blob) => {
+                        if (blob) {
+                            // Create file from blob
+                            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                            const filename = `photo-${timestamp}.jpg`;
+                            const file = new File([blob], filename, { type: 'image/jpeg' });
+                            
+                            console.log(`Captured photo: ${filename} (${(blob.size / 1024 / 1024).toFixed(2)}MB)`);
+                            
+                            // Upload the photo
+                            await this.uploadFiles([file]);
+                            
+                            // Exit full screen after successful capture
+                            setTimeout(() => {
+                                this.exitFullScreenCamera();
+                            }, 1000);
+                        }
+                    }, 'image/jpeg', 0.9);
+                    
+                } catch (error) {
+                    console.error('Failed to capture photo:', error);
+                    alert('Failed to capture photo: ' + error.message);
+                }
+            }
+
+            setupFileUpload() {
+                const uploadArea = document.querySelector('.upload-area');
+                
+                // File input change
+                this.fileInput.addEventListener('change', (e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                        this.uploadFiles(files);
+                    }
+                });
+                
+                // Drag and drop
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('border-success');
+                });
+                
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('border-success');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('border-success');
+                    
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) {
+                        this.uploadFiles(files);
+                    }
+                });
+            }
+
+            async uploadFiles(files) {
+                const progressContainer = document.getElementById('upload-progress');
+                const progressBar = progressContainer.querySelector('.progress-bar');
+                const statusDiv = document.getElementById('upload-status');
+                const resultsDiv = document.getElementById('upload-results');
+                
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                statusDiv.textContent = 'Preparing upload...';
+                
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                let successCount = 0;
+                let totalFiles = files.length;
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    try {
+                        statusDiv.textContent = `Uploading ${file.name}... (${i + 1}/${totalFiles})`;
+                        
+                        const response = await fetch('/api/upload', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            successCount++;
+                            console.log(`✅ Upload successful: ${file.name}`);
+                        } else {
+                            console.error(`❌ Upload failed: ${file.name} - ${result.error}`);
+                        }
+                        
+                        // Update progress
+                        const progress = ((i + 1) / totalFiles) * 100;
+                        progressBar.style.width = `${progress}%`;
+                        
+                    } catch (error) {
+                        console.error(`❌ Upload error: ${file.name}`, error);
+                    }
+                }
+                
+                // Show final results
+                statusDiv.textContent = `Upload complete: ${successCount}/${totalFiles} files uploaded successfully`;
+                
+                if (successCount > 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            Successfully uploaded ${successCount} file(s)!
+                        </div>
+                    `;
+                    
+                    // Reset file input
+                    this.fileInput.value = '';
+                }
+                
+                // Hide progress after 3 seconds
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 3000);
+            }
+
+            showWarning(message) {
+                this.cameraWarning.textContent = message;
+                this.cameraWarning.style.display = 'block';
+            }
+
+            hideWarning() {
+                this.cameraWarning.style.display = 'none';
+            }
+
+            enableCameraButton() {
+                this.startCameraBtn.disabled = false;
+                this.startCameraBtn.textContent = '📷 Start Full Screen Camera';
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new PhotoVaultUploader();
+        });
+    </script>
+</body>
+</html>
